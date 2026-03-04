@@ -1,0 +1,55 @@
+{
+  "source_paper": {
+    "title": "Target-Mediated Drug Disposition Population Pharmacokinetics Model of Alirocumab in Healthy Volunteers and Patients",
+    "doi": "10.1007/s40262-016-0505-1",
+    "authors": ["Djebli N", "Martinez JM", "Lohan L", "Khier S", "Brunet A", "Hurbin F", "Fabre D"],
+    "year": 2017
+  },
+  "entities": [
+    {
+      "entity_id": "e1",
+      "label": "Drug",
+      "canonical_name": "alirocumab",
+      "properties": {"drug_name": "alirocumab", "drug_type": "monoclonal_antibody", "aliases": ["praluent"]},
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e2",
+      "label": "Type",
+      "canonical_name": "two_compartment_tmdd_qss",
+      "properties": {"model_type": "two_compartment_tmdd_qss"},
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e3",
+      "label": "Organism",
+      "canonical_name": "human",
+      "properties": {"organism": "human"},
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e4",
+      "label": "Disease",
+      "canonical_name": "hypercholesterolemia",
+      "properties": {"name": "hypercholesterolemia", "aliases": ["familial hypercholesterolemia", "FH", "non-FH dyslipidemia"]},
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e5",
+      "label": "Model",
+      "canonical_name": "alirocumab_popPK_tmdd_qss_two_compartment",
+      "properties": {
+        "mathematical_equations": ["dC/dt = Ka*Depot/Vc - CLL*C/Vc - Kon*C*R + Koff*RC + Kint*RC - Q*(C/Vc - AT/Vp)", "dR/dt = Ksyn - Kdeg*R - Kon*C*R + Koff*RC", "dRC/dt = Kon*C*R - (Koff+Kint)*RC"],
+        "parameter_means": "{\"CLL_L_per_day\": 0.167, \"Kon_per_nM_per_day\": 559, \"Kint_per_day\": 0.125, \"Kdeg_per_day\": 1.35, \"Q_L_per_day\": 0.494, \"Vc_L\": 3.16, \"DISST_on_Vc\": 1.56}",
+        "parameter_iiv_std_dev": "{\"CLL_iiv_cv%\": 36.5, \"Kint_iiv_cv%\": 22.1, \"Kdeg_iiv_cv%\": 52.5, \"Q_iiv_cv%\": 64.1, \"Vc_iiv_cv%\": 43.3}"
+      },
+      "extraction_confidence": "high"
+    }
+  ],
+  "relationships": [
+    {"type": "CHARACTERIZES", "source_entity_id": "e5", "target_entity_id": "e1"},
+    {"type": "IS_TYPE", "source_entity_id": "e5", "target_entity_id": "e2"},
+    {"type": "STUDIED_IN", "source_entity_id": "e5", "target_entity_id": "e3"},
+    {"type": "TREATS", "source_entity_id": "e5", "target_entity_id": "e4"}
+  ]
+}

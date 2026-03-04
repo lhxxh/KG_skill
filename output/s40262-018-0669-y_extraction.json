@@ -1,0 +1,55 @@
+{
+  "source_paper": {
+    "title": "Population Pharmacokinetic Analysis of Alirocumab Using a Michaelis-Menten Approximation of a TMDD Model",
+    "doi": "10.1007/s40262-018-0669-y",
+    "authors": ["Martinez JM", "Brunet A", "Hurbin F", "DiCioccio AT", "Rauch C", "Fabre D"],
+    "year": 2019
+  },
+  "entities": [
+    {
+      "entity_id": "e1",
+      "label": "Drug",
+      "canonical_name": "alirocumab",
+      "properties": {"drug_name": "alirocumab", "drug_type": "monoclonal_antibody"},
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e2",
+      "label": "Type",
+      "canonical_name": "two_compartment_tmdd_michaelis_menten",
+      "properties": {"model_type": "two_compartment_tmdd_michaelis_menten"},
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e3",
+      "label": "Organism",
+      "canonical_name": "human",
+      "properties": {"organism": "human"},
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e4",
+      "label": "Disease",
+      "canonical_name": "hypercholesterolemia",
+      "properties": {"name": "hypercholesterolemia"},
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e5",
+      "label": "Model",
+      "canonical_name": "alirocumab_popPK_tmdd_mm_two_compartment",
+      "properties": {
+        "mathematical_equations": ["First-order absorption: Ka from SC depot to central compartment V2", "Linear clearance: CLL from central compartment", "Non-linear clearance: Vm*C/(Km+C) Michaelis-Menten elimination", "Intercompartmental distribution: Q between V2 (central) and V3 (peripheral)"],
+        "parameter_means": "{\"CLL_L_per_h\": 0.0124, \"V2_L\": 3.19, \"Ka_per_h\": 0.00768, \"V3_L\": 2.79, \"Q_L_per_h\": 0.0185, \"Vm_mg_per_h\": 0.183, \"Km_mg_per_L\": 7.73, \"F\": 0.862, \"LAG_h\": 0.641}",
+        "parameter_iiv_std_dev": "{\"CLL_iiv_cv%\": 48.2, \"V2_iiv_cv%\": 76.7, \"V3_iiv_cv%\": 27.1, \"Km_iiv_cv%\": 54.6, \"F_iiv_cv%\": 103}"
+      },
+      "extraction_confidence": "high"
+    }
+  ],
+  "relationships": [
+    {"type": "CHARACTERIZES", "source_entity_id": "e5", "target_entity_id": "e1"},
+    {"type": "IS_TYPE", "source_entity_id": "e5", "target_entity_id": "e2"},
+    {"type": "STUDIED_IN", "source_entity_id": "e5", "target_entity_id": "e3"},
+    {"type": "TREATS", "source_entity_id": "e5", "target_entity_id": "e4"}
+  ]
+}

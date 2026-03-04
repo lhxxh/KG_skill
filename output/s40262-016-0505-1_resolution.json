@@ -1,0 +1,11 @@
+{
+  "source_paper": "s40262-016-0505-1.pdf",
+  "resolutions": [
+    {"entity_id": "e1", "label": "Drug", "canonical_name": "alirocumab", "action": "CREATED", "step": "new"},
+    {"entity_id": "e2", "label": "Type", "canonical_name": "two_compartment_tmdd_qss", "action": "CREATED", "step": "new"},
+    {"entity_id": "e3", "label": "Organism", "canonical_name": "human", "action": "MATCHED", "step": "exact", "matched_node": "human"},
+    {"entity_id": "e4", "label": "Disease", "canonical_name": "hypercholesterolemia", "action": "CREATED", "step": "new"},
+    {"entity_id": "e5", "label": "Model", "canonical_name": "alirocumab_popPK_tmdd_qss_two_compartment", "action": "CREATED", "step": "new"}
+  ],
+  "summary": {"matched": 1, "created": 4, "flagged": 0}
+}

@@ -1,0 +1,16 @@
+{
+  "source_paper": "1-s2.0-S0378517323011092-main.pdf",
+  "resolutions": [
+    {"entity_id": "e1", "label": "Drug", "canonical_name": "rituximab", "action": "CREATED", "step": "new"},
+    {"entity_id": "e2", "label": "Drug", "canonical_name": "adalimumab", "action": "CREATED", "step": "new"},
+    {"entity_id": "e3", "label": "Drug", "canonical_name": "tocilizumab", "action": "CREATED", "step": "new"},
+    {"entity_id": "e4", "label": "Drug", "canonical_name": "infliximab", "action": "CREATED", "step": "new"},
+    {"entity_id": "e5", "label": "Drug", "canonical_name": "belimumab", "action": "CREATED", "step": "new"},
+    {"entity_id": "e6", "label": "Type", "canonical_name": "four_compartment_fcrn", "action": "CREATED", "step": "new"},
+    {"entity_id": "e7", "label": "Organism", "canonical_name": "rat", "action": "CREATED", "step": "new"},
+    {"entity_id": "e8", "label": "Organism", "canonical_name": "human", "action": "CREATED", "step": "new"},
+    {"entity_id": "e9", "label": "Model", "canonical_name": "rituximab_sc_four_compartment_fcrn", "action": "CREATED", "step": "new"},
+    {"entity_id": "e10", "label": "Model", "canonical_name": "adalimumab_sc_four_compartment_fcrn", "action": "CREATED", "step": "new"}
+  ],
+  "summary": {"matched": 0, "created": 10, "flagged": 0}
+}
