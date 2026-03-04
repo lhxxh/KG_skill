@@ -28,19 +28,94 @@ The kg-pipeline adds: schema-guided knowledge extraction, entity resolution, and
 
 Run these four stages in order.
 
-### Stage 1 — PDF Text Extraction
+### Stage 1 — PDF Content Extraction
 
-**Delegate to the pdf skill.** Use pdfplumber (documented in the pdf skill) to:
+**Delegate to the pdf skill.** Use a multi-layer extraction strategy to capture both text and visual content.
 
-1. Extract text page-by-page with layout preservation
-2. Extract tables separately as row arrays
-3. Capture metadata from the first 2 pages:
-   - **title** — usually the largest text on page 1
-   - **DOI** — look for `doi:` or `https://doi.org/` patterns
-   - **authors** — names between title and abstract
-   - **year** — from DOI, header, or copyright line
+#### Layer 1: Text extraction (pdfplumber)
 
-If text extraction is poor (scanned PDF), the pdf skill also covers OCR via pytesseract + pdf2image.
+```python
+import pdfplumber
+
+with pdfplumber.open(pdf_path) as pdf:
+    pages = []
+    tables = []
+    for i, page in enumerate(pdf.pages):
+        pages.append({"page": i + 1, "text": page.extract_text() or ""})
+        for table in page.extract_tables():
+            tables.append({"page": i + 1, "rows": table})
+```
+
+Capture metadata from the first 2 pages:
+- **title** — usually the largest text on page 1
+- **DOI** — look for `doi:` or `https://doi.org/` patterns
+- **authors** — names between title and abstract
+- **year** — from DOI, header, or copyright line
+
+#### Layer 2: Page images for visual inspection
+
+PK papers contain critical info in figures (compartment diagrams, PK curves, parameter tables rendered as images). Convert pages to images using the pdf skill's `convert_pdf_to_images.py`:
+
+```python
+from pdf2image import convert_from_path
+
+images = convert_from_path(pdf_path, dpi=200)
+for i, image in enumerate(images):
+    # Resize if needed for context window efficiency
+    width, height = image.size
+    max_dim = 1000
+    if width > max_dim or height > max_dim:
+        scale = min(max_dim / width, max_dim / height)
+        image = image.resize((int(width * scale), int(height * scale)))
+    image.save(f"output/{basename}_page_{i+1}.png")
+```
+
+Then visually read the page images with Claude to extract:
+- **Parameter tables** that pdfplumber may miss (complex layouts, merged cells)
+- **Compartment model diagrams** — identify model structure (1-cmt, 2-cmt, TMDD)
+- **PK profile figures** — confirm drug names, dosing regimens, species
+- **Equations rendered as images** — mathematical model definitions
+
+#### Layer 3: OCR fallback for scanned PDFs
+
+If pdfplumber returns little/no text (< 100 chars per page), fall back to OCR:
+
+```python
+import pytesseract
+from pdf2image import convert_from_path
+
+images = convert_from_path(pdf_path)
+for i, image in enumerate(images):
+    text = pytesseract.image_to_string(image)
+    pages.append({"page": i + 1, "text": text})
+```
+
+#### Layer 4: Large PDF handling
+
+For PDFs with many pages (textbooks, long reviews), process in chunks to manage context:
+
+```python
+from pypdf import PdfReader
+
+reader = PdfReader(pdf_path)
+total_pages = len(reader.pages)
+chunk_size = 10  # Process 10 pages at a time
+
+for start in range(0, total_pages, chunk_size):
+    end = min(start + chunk_size, total_pages)
+    # Extract text + images for pages start..end
+    # Run Stage 2 extraction per chunk
+    # Merge extracted entities across chunks (dedup by canonical_name)
+```
+
+#### Extraction priority
+
+Use the layers in order — each adds information the previous may miss:
+
+1. **Always run Layer 1** (text) — fast, gets most structured content
+2. **Always run Layer 2** (images) on pages with figures/tables — catches visual-only information like diagrams and image-based tables
+3. **Run Layer 3** (OCR) only if Layer 1 yields poor text output
+4. **Run Layer 4** (chunking) only for PDFs with > 20 pages
 
 ### Stage 2 — Schema-Guided Knowledge Extraction
 
@@ -120,6 +195,9 @@ Save intermediate results to the `output/` directory (create it if it doesn't ex
 output/
   1-s2.0-S0378517323011092-main_extraction.json   # Stage 2: extracted entities & relationships
   1-s2.0-S0378517323011092-main_resolution.json    # Stage 3: resolution map & decisions
+  1-s2.0-S0378517323011092-main_page_1.png         # Stage 1: page images (for visual inspection)
+  1-s2.0-S0378517323011092-main_page_2.png
+  ...
 ```
 
 **`_extraction.json`** — the full extraction JSON from Stage 2 (source_paper metadata, entities, relationships).

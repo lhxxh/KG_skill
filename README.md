@@ -10,7 +10,7 @@
 2. install python package
 
 ```bash
-    pip install pypdf pdfplumber Pillow pdf2image reportlab pytesseract pypdfium2
+    pip install pypdf pdfplumber Pillow pdf2image reportlab pytesseract pypdfium2 pdf2image
 ```
 
 3. Install neo4j on local and create instances.
@@ -23,13 +23,19 @@
 
 # Run
 
-1. Run this command in claude code
+1. Run this command in claude code to process paper into neo4j (trigger kg-pipeline skill)
 
 ```bash
     Process the papers in paper/ using schema/pk_schema.md into Neo4j
 ```
 
 2. Extracted Knowledge will be in ouput directory and also loaded into neo4j
+
+3. Run an example in claude code to query neo4j (trigger neo4j-cypher)
+
+```bash
+    Query Neo4j: find all models that characterize alirocumab
+```
 
 # Test
 

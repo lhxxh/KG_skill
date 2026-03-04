@@ -2,7 +2,11 @@
   "source_paper": {
     "title": "A compartment model for subcutaneous injection of monoclonal antibodies",
     "doi": "10.1016/j.ijpharm.2023.123687",
-    "authors": ["Zhong X", "Liu Y", "Ardekani AM"],
+    "authors": [
+      "Zhong X",
+      "Liu Y",
+      "Ardekani AM"
+    ],
     "year": 2024
   },
   "entities": [
@@ -10,87 +14,439 @@
       "entity_id": "e1",
       "label": "Drug",
       "canonical_name": "rituximab",
-      "properties": {"drug_name": "rituximab", "drug_type": "monoclonal_antibody"},
+      "properties": {
+        "drug_name": "rituximab",
+        "drug_type": "monoclonal_antibody"
+      },
       "extraction_confidence": "high"
     },
     {
       "entity_id": "e2",
       "label": "Drug",
       "canonical_name": "adalimumab",
-      "properties": {"drug_name": "adalimumab", "drug_type": "monoclonal_antibody"},
+      "properties": {
+        "drug_name": "adalimumab",
+        "drug_type": "monoclonal_antibody",
+        "aliases": [
+          "humira"
+        ]
+      },
       "extraction_confidence": "high"
     },
     {
       "entity_id": "e3",
       "label": "Drug",
       "canonical_name": "tocilizumab",
-      "properties": {"drug_name": "tocilizumab", "drug_type": "monoclonal_antibody"},
+      "properties": {
+        "drug_name": "tocilizumab",
+        "drug_type": "monoclonal_antibody"
+      },
       "extraction_confidence": "high"
     },
     {
       "entity_id": "e4",
       "label": "Drug",
       "canonical_name": "infliximab",
-      "properties": {"drug_name": "infliximab", "drug_type": "monoclonal_antibody"},
+      "properties": {
+        "drug_name": "infliximab",
+        "drug_type": "monoclonal_antibody"
+      },
       "extraction_confidence": "high"
     },
     {
       "entity_id": "e5",
       "label": "Drug",
-      "canonical_name": "belimumab",
-      "properties": {"drug_name": "belimumab", "drug_type": "monoclonal_antibody"},
+      "canonical_name": "anifrolumab",
+      "properties": {
+        "drug_name": "anifrolumab",
+        "drug_type": "monoclonal_antibody"
+      },
       "extraction_confidence": "high"
     },
     {
       "entity_id": "e6",
-      "label": "Type",
-      "canonical_name": "four_compartment_fcrn",
-      "properties": {"model_type": "four_compartment_fcrn"},
+      "label": "Drug",
+      "canonical_name": "belimumab",
+      "properties": {
+        "drug_name": "belimumab",
+        "drug_type": "monoclonal_antibody"
+      },
       "extraction_confidence": "high"
     },
     {
       "entity_id": "e7",
-      "label": "Organism",
-      "canonical_name": "rat",
-      "properties": {"organism": "rat"},
+      "label": "Drug",
+      "canonical_name": "canakinumab",
+      "properties": {
+        "drug_name": "canakinumab",
+        "drug_type": "monoclonal_antibody"
+      },
       "extraction_confidence": "high"
     },
     {
       "entity_id": "e8",
-      "label": "Organism",
-      "canonical_name": "human",
-      "properties": {"organism": "human"},
+      "label": "Drug",
+      "canonical_name": "daclizumab",
+      "properties": {
+        "drug_name": "daclizumab",
+        "drug_type": "monoclonal_antibody"
+      },
       "extraction_confidence": "high"
     },
     {
       "entity_id": "e9",
-      "label": "Model",
-      "canonical_name": "rituximab_sc_four_compartment_fcrn",
+      "label": "Drug",
+      "canonical_name": "golimumab",
       "properties": {
-        "mathematical_equations": ["dm1/dt = fS(t) - k12*m1", "dm2/dt = k12*m1 + k42*m4 - (k23+ka)*m2 + kr*m6b", "dm3/dt = k23*m2 - (k34+ka)*m3 + kr*m7b", "dm4/dt = k34*m3 + kr*m8b - (ka+k42)*m4"],
-        "parameter_means": "{\"k12\": 1.498, \"k23\": 0.72, \"k34\": 0.689, \"k42\": 1.274, \"ka\": 2.680, \"kr\": 1.796, \"kd\": 0.984, \"kdiss\": 0.257, \"mF0\": 1.031}",
-        "parameter_iiv_std_dev": "{\"k12_sd\": 0.003, \"k23_sd\": 0.014, \"k34_sd\": 0.014, \"k42_sd\": 0.016, \"ka_sd\": 0.124, \"kr_sd\": 0.052, \"kd_sd\": 0.028, \"kdiss_sd\": 0.021, \"mF0_sd\": 0.119}"
+        "drug_name": "golimumab",
+        "drug_type": "monoclonal_antibody"
       },
       "extraction_confidence": "high"
     },
     {
       "entity_id": "e10",
-      "label": "Model",
-      "canonical_name": "adalimumab_sc_four_compartment_fcrn",
+      "label": "Drug",
+      "canonical_name": "guselkumab",
       "properties": {
-        "mathematical_equations": ["dm1/dt = fS(t) - k12*m1", "dm2/dt = k12*m1 + k42*m4 - (k23+ka)*m2 + kr*m6b", "dm3/dt = k23*m2 - (k34+ka)*m3 + kr*m7b", "dm4/dt = k34*m3 + kr*m8b - (ka+k42)*m4"],
-        "parameter_means": "{\"k12\": 0.714, \"k23\": 0.312, \"k34\": 0.212, \"k42\": 1.024, \"ka\": 0.130, \"kr\": 0.824, \"kd\": 0.377, \"kdiss\": 0.859, \"mF0\": 0.011}",
+        "drug_name": "guselkumab",
+        "drug_type": "monoclonal_antibody"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e11",
+      "label": "Drug",
+      "canonical_name": "trastuzumab",
+      "properties": {
+        "drug_name": "trastuzumab",
+        "drug_type": "monoclonal_antibody"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e12",
+      "label": "Type",
+      "canonical_name": "multi_compartment_fcRn",
+      "properties": {
+        "model_type": "multi_compartment_fcRn"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e13",
+      "label": "Organism",
+      "canonical_name": "human",
+      "properties": {
+        "organism": "human"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e14",
+      "label": "Organism",
+      "canonical_name": "rat",
+      "properties": {
+        "organism": "rat"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e15",
+      "label": "Model",
+      "canonical_name": "rituximab_sc_fcRn_multi_compartment_fcRn",
+      "properties": {
+        "mathematical_equations": [
+          "dm1/dt = fS(t) - k12*m1",
+          "dm2/dt = k12*m1 + k42*m4 - (k23+ka)*m2 + kr*m6b",
+          "dm3/dt = k23*m2 - (k34+ka)*m3 + kr*m7b",
+          "dm4/dt = k34*m3 + kr*m8b - (k42+ka)*m4",
+          "dmjt/dt = ka*m(j-4) - kd*mjf - kr*mjb"
+        ],
+        "parameter_means": "{\"k12\": 1.498, \"k23\": 0.72, \"k34\": 0.689, \"k42\": 1.274, \"ka\": 2.68, \"kr\": 1.796, \"kd\": 0.984, \"kdiss\": 0.257, \"mF0\": 1.031}",
+        "parameter_iiv_std_dev": "{\"k12_sd\": 0.003, \"k23_sd\": 0.014, \"k34_sd\": 0.014, \"k42_sd\": 0.016, \"ka_sd\": 0.124, \"kr_sd\": 0.052, \"kd_sd\": 0.028, \"kdiss_sd\": 0.021, \"mF0_sd\": 0.119}"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e16",
+      "label": "Model",
+      "canonical_name": "adalimumab_sc_fcRn_multi_compartment_fcRn",
+      "properties": {
+        "mathematical_equations": [
+          "dm1/dt = fS(t) - k12*m1",
+          "dm2/dt = k12*m1 + k42*m4 - (k23+ka)*m2 + kr*m6b",
+          "dm3/dt = k23*m2 - (k34+ka)*m3 + kr*m7b",
+          "dm4/dt = k34*m3 + kr*m8b - (k42+ka)*m4",
+          "dmjt/dt = ka*m(j-4) - kd*mjf - kr*mjb"
+        ],
+        "parameter_means": "{\"k12\": 0.714, \"k23\": 0.312, \"k34\": 0.212, \"k42\": 1.024, \"ka\": 0.13, \"kr\": 0.824, \"kd\": 0.377, \"kdiss\": 0.859, \"mF0\": 0.011, \"bioavailability\": 0.6}",
         "parameter_iiv_std_dev": "{\"k12_sd\": 0.012, \"k23_sd\": 0.009, \"k34_sd\": 0.016, \"k42_sd\": 0.045, \"ka_sd\": 0.006, \"kr_sd\": 0.008, \"kd_sd\": 0.019, \"kdiss_sd\": 0.007, \"mF0_sd\": 0.001}"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e17",
+      "label": "Model",
+      "canonical_name": "tocilizumab_sc_fcRn_multi_compartment_fcRn",
+      "properties": {
+        "mathematical_equations": [
+          "dm1/dt = fS(t) - k12*m1",
+          "dm2/dt = k12*m1 + k42*m4 - (k23+ka)*m2 + kr*m6b",
+          "dm3/dt = k23*m2 - (k34+ka)*m3 + kr*m7b",
+          "dm4/dt = k34*m3 + kr*m8b - (k42+ka)*m4",
+          "dmjt/dt = ka*m(j-4) - kd*mjf - kr*mjb"
+        ],
+        "parameter_means": "{\"k12\": 1.317, \"k23\": 0.614, \"k34\": 0.54, \"k42\": 3.575, \"ka\": 0.406, \"kr\": 3.551, \"kd\": 0.184, \"kdiss\": 1.871, \"mF0\": 0.019, \"bioavailability\": 0.47}",
+        "parameter_iiv_std_dev": "{\"k12_sd\": 0.152, \"k23_sd\": 0.101, \"k34_sd\": 0.035, \"k42_sd\": 1.396, \"ka_sd\": 0.028, \"kr_sd\": 0.969, \"kd_sd\": 0.248, \"kdiss_sd\": 0.538, \"mF0_sd\": 0.012}"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e18",
+      "label": "Model",
+      "canonical_name": "infliximab_sc_fcRn_multi_compartment_fcRn",
+      "properties": {
+        "mathematical_equations": [
+          "dm1/dt = fS(t) - k12*m1",
+          "dm2/dt = k12*m1 + k42*m4 - (k23+ka)*m2 + kr*m6b",
+          "dm3/dt = k23*m2 - (k34+ka)*m3 + kr*m7b",
+          "dm4/dt = k34*m3 + kr*m8b - (k42+ka)*m4",
+          "dmjt/dt = ka*m(j-4) - kd*mjf - kr*mjb"
+        ],
+        "parameter_means": "{\"k12\": 0.374, \"k23\": 2.633, \"k34\": 3.009, \"k42\": 2.424, \"ka\": 0.102, \"kr\": 2.228, \"kd\": 1.642, \"kdiss\": 0.743, \"mF0\": 0.626}",
+        "parameter_iiv_std_dev": "{\"k12_sd\": 0.043, \"k23_sd\": 0.303, \"k34_sd\": 0.618, \"k42_sd\": 0.436, \"ka_sd\": 0.025, \"kr_sd\": 0.418, \"kd_sd\": 0.588, \"kdiss_sd\": 0.347, \"mF0_sd\": 0.35}"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e19",
+      "label": "Model",
+      "canonical_name": "anifrolumab_sc_fcRn_multi_compartment_fcRn",
+      "properties": {
+        "parameter_means": "{\"k12\": 1.435, \"k23\": 1.416, \"k34\": 0.588, \"k42\": 3.855, \"ka\": 0.227, \"kr\": 2.01, \"kd\": 0.485, \"kdiss\": 1.472, \"mF0\": 0.038, \"bioavailability\": 0.75}"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e20",
+      "label": "Model",
+      "canonical_name": "belimumab_sc_fcRn_multi_compartment_fcRn",
+      "properties": {
+        "parameter_means": "{\"k12\": 1.455, \"k23\": 0.882, \"k34\": 0.453, \"k42\": 4.792, \"ka\": 0.16, \"kr\": 0.83, \"kd\": 1.03, \"kdiss\": 0.178, \"mF0\": 0.06, \"bioavailability\": 0.77}"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e21",
+      "label": "Model",
+      "canonical_name": "canakinumab_sc_fcRn_multi_compartment_fcRn",
+      "properties": {
+        "parameter_means": "{\"k12\": 0.481, \"k23\": 0.568, \"k34\": 0.27, \"k42\": 1.689, \"ka\": 0.113, \"kr\": 0.913, \"kd\": 0.249, \"kdiss\": 0.481, \"mF0\": 0.023, \"bioavailability\": 0.68}"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e22",
+      "label": "Model",
+      "canonical_name": "daclizumab_sc_fcRn_multi_compartment_fcRn",
+      "properties": {
+        "parameter_means": "{\"k12\": 0.549, \"k23\": 0.303, \"k34\": 0.202, \"k42\": 0.686, \"ka\": 0.134, \"kr\": 0.377, \"kd\": 0.932, \"kdiss\": 0.737, \"mF0\": 0.117, \"bioavailability\": 0.57}"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e23",
+      "label": "Model",
+      "canonical_name": "golimumab_sc_fcRn_multi_compartment_fcRn",
+      "properties": {
+        "parameter_means": "{\"k12\": 1.104, \"k23\": 1.284, \"k34\": 3.307, \"k42\": 4.618, \"ka\": 0.114, \"kr\": 1.517, \"kd\": 3.303, \"kdiss\": 0.503, \"mF0\": 0.042, \"bioavailability\": 0.84}"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e24",
+      "label": "Model",
+      "canonical_name": "guselkumab_sc_fcRn_multi_compartment_fcRn",
+      "properties": {
+        "parameter_means": "{\"k12\": 1.492, \"k23\": 0.408, \"k34\": 0.146, \"k42\": 0.812, \"ka\": 0.471, \"kr\": 0.743, \"kd\": 1.428, \"kdiss\": 2.052, \"mF0\": 0.02, \"bioavailability\": 0.35}"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e25",
+      "label": "Model",
+      "canonical_name": "trastuzumab_sc_fcRn_multi_compartment_fcRn",
+      "properties": {
+        "parameter_means": "{\"k12\": 1.499, \"k23\": 1.036, \"k34\": 0.232, \"k42\": 1.312, \"ka\": 0.311, \"kr\": 1.232, \"kd\": 0.291, \"kdiss\": 0.294, \"mF0\": 0.087}"
       },
       "extraction_confidence": "high"
     }
   ],
   "relationships": [
-    {"type": "CHARACTERIZES", "source_entity_id": "e9", "target_entity_id": "e1"},
-    {"type": "CHARACTERIZES", "source_entity_id": "e10", "target_entity_id": "e2"},
-    {"type": "IS_TYPE", "source_entity_id": "e9", "target_entity_id": "e6"},
-    {"type": "IS_TYPE", "source_entity_id": "e10", "target_entity_id": "e6"},
-    {"type": "STUDIED_IN", "source_entity_id": "e9", "target_entity_id": "e7"},
-    {"type": "STUDIED_IN", "source_entity_id": "e10", "target_entity_id": "e8"}
+    {
+      "type": "IS_TYPE",
+      "source_entity_id": "e15",
+      "target_entity_id": "e12"
+    },
+    {
+      "type": "IS_TYPE",
+      "source_entity_id": "e16",
+      "target_entity_id": "e12"
+    },
+    {
+      "type": "IS_TYPE",
+      "source_entity_id": "e17",
+      "target_entity_id": "e12"
+    },
+    {
+      "type": "IS_TYPE",
+      "source_entity_id": "e18",
+      "target_entity_id": "e12"
+    },
+    {
+      "type": "IS_TYPE",
+      "source_entity_id": "e19",
+      "target_entity_id": "e12"
+    },
+    {
+      "type": "IS_TYPE",
+      "source_entity_id": "e20",
+      "target_entity_id": "e12"
+    },
+    {
+      "type": "IS_TYPE",
+      "source_entity_id": "e21",
+      "target_entity_id": "e12"
+    },
+    {
+      "type": "IS_TYPE",
+      "source_entity_id": "e22",
+      "target_entity_id": "e12"
+    },
+    {
+      "type": "IS_TYPE",
+      "source_entity_id": "e23",
+      "target_entity_id": "e12"
+    },
+    {
+      "type": "IS_TYPE",
+      "source_entity_id": "e24",
+      "target_entity_id": "e12"
+    },
+    {
+      "type": "IS_TYPE",
+      "source_entity_id": "e25",
+      "target_entity_id": "e12"
+    },
+    {
+      "type": "CHARACTERIZES",
+      "source_entity_id": "e15",
+      "target_entity_id": "e1"
+    },
+    {
+      "type": "CHARACTERIZES",
+      "source_entity_id": "e16",
+      "target_entity_id": "e2"
+    },
+    {
+      "type": "CHARACTERIZES",
+      "source_entity_id": "e17",
+      "target_entity_id": "e3"
+    },
+    {
+      "type": "CHARACTERIZES",
+      "source_entity_id": "e18",
+      "target_entity_id": "e4"
+    },
+    {
+      "type": "CHARACTERIZES",
+      "source_entity_id": "e19",
+      "target_entity_id": "e5"
+    },
+    {
+      "type": "CHARACTERIZES",
+      "source_entity_id": "e20",
+      "target_entity_id": "e6"
+    },
+    {
+      "type": "CHARACTERIZES",
+      "source_entity_id": "e21",
+      "target_entity_id": "e7"
+    },
+    {
+      "type": "CHARACTERIZES",
+      "source_entity_id": "e22",
+      "target_entity_id": "e8"
+    },
+    {
+      "type": "CHARACTERIZES",
+      "source_entity_id": "e23",
+      "target_entity_id": "e9"
+    },
+    {
+      "type": "CHARACTERIZES",
+      "source_entity_id": "e24",
+      "target_entity_id": "e10"
+    },
+    {
+      "type": "CHARACTERIZES",
+      "source_entity_id": "e25",
+      "target_entity_id": "e11"
+    },
+    {
+      "type": "STUDIED_IN",
+      "source_entity_id": "e15",
+      "target_entity_id": "e14"
+    },
+    {
+      "type": "STUDIED_IN",
+      "source_entity_id": "e16",
+      "target_entity_id": "e13"
+    },
+    {
+      "type": "STUDIED_IN",
+      "source_entity_id": "e17",
+      "target_entity_id": "e13"
+    },
+    {
+      "type": "STUDIED_IN",
+      "source_entity_id": "e18",
+      "target_entity_id": "e13"
+    },
+    {
+      "type": "STUDIED_IN",
+      "source_entity_id": "e19",
+      "target_entity_id": "e13"
+    },
+    {
+      "type": "STUDIED_IN",
+      "source_entity_id": "e20",
+      "target_entity_id": "e13"
+    },
+    {
+      "type": "STUDIED_IN",
+      "source_entity_id": "e21",
+      "target_entity_id": "e13"
+    },
+    {
+      "type": "STUDIED_IN",
+      "source_entity_id": "e22",
+      "target_entity_id": "e13"
+    },
+    {
+      "type": "STUDIED_IN",
+      "source_entity_id": "e23",
+      "target_entity_id": "e13"
+    },
+    {
+      "type": "STUDIED_IN",
+      "source_entity_id": "e24",
+      "target_entity_id": "e13"
+    },
+    {
+      "type": "STUDIED_IN",
+      "source_entity_id": "e25",
+      "target_entity_id": "e13"
+    }
   ]
 }
