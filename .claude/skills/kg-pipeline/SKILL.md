@@ -7,14 +7,14 @@ description: Orchestrates the full knowledge graph ingestion pipeline. Process p
 
 ## Overview
 
-This guide covers the end-to-end pipeline for ingesting pharmacokinetic papers into a Neo4j knowledge graph. The pipeline has two stages: LLM-powered extraction (PDF → JSON) and deterministic loading (JSON → Neo4j). The user interacts with this skill — they never need to run scripts directly. For extraction details, see the kg-extract skill. For query operations, see the kg-qa skill.
+This guide covers the end-to-end pipeline for ingesting papers into a Neo4j knowledge graph. The pipeline has two stages: LLM-powered extraction (PDF → JSON) and deterministic loading (JSON → Neo4j). The schema file defines what entities and relationships to extract. The user interacts with this skill — they never need to run scripts directly. For extraction details, see the kg-extract skill. For query operations, see the kg-qa skill.
 
 ## Architecture
 
 ```
 User Request
   └─ kg-pipeline skill (this file)
-       └─ python3 scripts/ingest.py [args]
+       └─ python3 scripts/ingest.py --schema schema/X.md [args]
             ├─ Step 1: claude -p "kg-extract" (LLM extraction)
             │    └─ Reads PDF + schema → writes output/*.json
             └─ Step 2: python3 scripts/load_graph.py (deterministic)
@@ -24,8 +24,11 @@ User Request
 ## Quick Start
 
 ```bash
-# Process all PDFs in paper/ (full pipeline)
+# Process all PDFs in paper/ using the default schema
 python3 scripts/ingest.py
+
+# Process with a specific schema
+python3 scripts/ingest.py --schema schema/my_schema.md
 ```
 
 ## Pipeline Commands
@@ -34,6 +37,7 @@ python3 scripts/ingest.py
 
 ```bash
 python3 scripts/ingest.py
+python3 scripts/ingest.py --schema schema/my_schema.md
 ```
 
 This will:
@@ -44,14 +48,14 @@ This will:
 ### Full Pipeline — Specific Paper
 
 ```bash
-python3 scripts/ingest.py paper/s40262-016-0505-1.pdf
+python3 scripts/ingest.py paper/specific_paper.pdf
+python3 scripts/ingest.py --schema schema/my_schema.md paper/specific_paper.pdf
 ```
 
 ### Extraction Only — Skip Neo4j Loading
 
 ```bash
 python3 scripts/ingest.py --skip-loading
-python3 scripts/ingest.py --skip-loading paper/specific.pdf
 ```
 
 ### Loading Only — Skip Extraction
@@ -68,7 +72,7 @@ Loads all existing `output/*_extraction.json` files without re-running Claude.
 python3 scripts/ingest.py --init-schema
 ```
 
-Creates 5 uniqueness constraints and 5 fulltext indexes (idempotent).
+Creates uniqueness constraints and fulltext indexes as defined in the schema (idempotent).
 
 ## Graph Inspection
 
@@ -128,7 +132,7 @@ When running `ingest.py`, the output reports:
 | `scripts/load_graph.py` | Deterministic Neo4j loader with entity resolution |
 | `.claude/skills/kg-extract/SKILL.md` | LLM extraction skill (PDF → JSON) |
 | `.claude/skills/kg-qa/SKILL.md` | NL question answering skill (Cypher queries) |
-| `schema/pk_schema.md` | Node types, relationships, naming conventions |
+| `schema/` | Schema files defining node types, relationships, constraints |
 | `output/` | Extraction JSON files (contract between extraction and loading) |
 | `paper/` | Source PDF papers |
 
@@ -138,6 +142,7 @@ When running `ingest.py`, the output reports:
 |--------------|---------|
 | "Process papers" / "Ingest papers" | `python3 scripts/ingest.py` |
 | "Process [specific PDF]" | `python3 scripts/ingest.py paper/file.pdf` |
+| "Use schema X" | `python3 scripts/ingest.py --schema schema/X.md` |
 | "Load existing extractions" | `python3 scripts/ingest.py --skip-extraction` |
 | "Extract only" | `python3 scripts/ingest.py --skip-loading` |
 | "Init schema" / "Create constraints" | `python3 scripts/ingest.py --init-schema` |

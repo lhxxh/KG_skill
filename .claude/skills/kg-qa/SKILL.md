@@ -1,47 +1,34 @@
 ---
 name: kg-qa
-description: Answer natural language questions about the pharmacokinetic knowledge graph. Translates questions into Cypher queries, executes against Neo4j, and returns formatted answers with source paper provenance. Triggered by questions like "find models for [drug]", "what drugs treat [disease]?", "show me all [entity type]", "which papers describe [entity]?", "compare models for [drug]", or any natural language question about the PK knowledge graph.
+description: Answer natural language questions about the knowledge graph. Translates questions into Cypher queries, executes against Neo4j, and returns formatted answers with source paper provenance. Triggered by questions like "find [entity]", "what [entities] are related to [entity]?", "show me all [entity type]", "which papers describe [entity]?", "compare [entities]", or any natural language question about the knowledge graph.
 ---
 
-# PK Knowledge Graph Question Answering Guide
+# Knowledge Graph Question Answering Guide
 
 ## Overview
 
-This guide covers translating natural language questions into Cypher queries, executing them against the Neo4j PK knowledge graph, and formatting provenance-aware answers. For Cypher syntax and modern patterns, see the neo4j-cypher skill. For data ingestion, see the kg-pipeline skill. The graph schema is defined in `schema/pk_schema.md`.
+This guide covers translating natural language questions into Cypher queries, executing them against the Neo4j knowledge graph, and formatting provenance-aware answers. The graph schema is defined in the schema file (e.g., `schema/pk_schema.md`) — read it first to understand available node types, relationships, and properties. For Cypher syntax and modern patterns, see the neo4j-cypher skill. For data ingestion, see the kg-pipeline skill.
 
 ## Quick Start
 
 ```bash
+# Read the schema to understand the graph structure
+cat schema/pk_schema.md
+
 # Execute a Cypher query
 cypher-shell -u neo4j -p docling-graph --format plain \
-  "MATCH (m:Model)-[:CHARACTERIZES]->(d:Drug {canonical_name: 'alirocumab'})
-   RETURN m.canonical_name AS model, m.source_papers AS sources;"
+  "MATCH (n) RETURN labels(n)[0] AS label, count(n) AS total ORDER BY total DESC;"
 ```
 
-## Graph Schema Reference
+## Graph Schema
 
-### Nodes
+Read the schema file to understand:
+- **Node types**: defined as `**Label** (description)` with properties
+- **Relationships**: defined as `(Source)-[:TYPE]->(Target)` with cardinality
+- **Constraints**: uniqueness on `canonical_name` per label
+- **Fulltext indexes**: for fuzzy search
 
-All nodes are keyed on `canonical_name` (unique, indexed).
-
-| Label | Key Properties | Fulltext Index |
-|-------|---------------|----------------|
-| Model | `canonical_name`, `mathematical_equations`, `parameter_means`, `parameter_iiv_std_dev` | `model_fulltext` |
-| Drug | `canonical_name`, `drug_name`, `drug_type`, `aliases` | `drug_fulltext` |
-| Type | `canonical_name`, `model_type` | `type_fulltext` |
-| Organism | `canonical_name`, `organism` | `organism_fulltext` |
-| Disease | `canonical_name`, `name`, `aliases` | `disease_fulltext` |
-
-### Relationships
-
-All relationships carry provenance: `source_papers` (string[]) and `extraction_source` (string).
-
-| Type | Pattern | Cardinality |
-|------|---------|-------------|
-| IS_TYPE | `(Model)-[:IS_TYPE]->(Type)` | one-to-one |
-| CHARACTERIZES | `(Model)-[:CHARACTERIZES]->(Drug)` | many-to-one |
-| STUDIED_IN | `(Model)-[:STUDIED_IN]->(Organism)` | many-to-many |
-| TREATS | `(Model)-[:TREATS]->(Disease)` | many-to-many |
+All nodes are keyed on `canonical_name` (unique, indexed). All relationships carry provenance: `source_papers` (string[]) and `extraction_source` (string).
 
 ## Query Execution
 
@@ -51,87 +38,74 @@ cypher-shell -u neo4j -p docling-graph --format plain "YOUR CYPHER HERE"
 
 ## Cypher Query Patterns
 
-### Drug Lookup
+### Entity Lookup
 
 ```cypher
-MATCH (d:Drug {canonical_name: "alirocumab"})
-RETURN d.canonical_name AS drug,
-       d.drug_type AS type,
-       d.aliases AS aliases,
-       d.source_papers AS sources
+MATCH (n:Label {canonical_name: "entity_name"})
+RETURN n.canonical_name AS name, n.source_papers AS sources
 ```
 
-### Models for a Drug
+### Traverse a Relationship
 
 ```cypher
-MATCH (m:Model)-[:CHARACTERIZES]->(d:Drug {canonical_name: "alirocumab"})
-MATCH (m)-[r_type:IS_TYPE]->(t:Type)
-RETURN m.canonical_name AS model,
-       t.canonical_name AS type,
-       m.source_papers AS model_sources,
-       r_type.source_papers AS rel_sources
+MATCH (a:SourceLabel)-[r:REL_TYPE]->(b:TargetLabel {canonical_name: "target_name"})
+RETURN a.canonical_name AS source,
+       b.canonical_name AS target,
+       r.source_papers AS rel_sources
 ```
 
-### Models with Full Context
+### Entity with Full Context
 
 ```cypher
-MATCH (m:Model)-[r:CHARACTERIZES]->(d:Drug {canonical_name: "alirocumab"})
-MATCH (m)-[:IS_TYPE]->(t:Type)
-OPTIONAL MATCH (m)-[:STUDIED_IN]->(o:Organism)
-OPTIONAL MATCH (m)-[:TREATS]->(dis:Disease)
-RETURN m.canonical_name AS model,
-       t.canonical_name AS type,
-       collect(DISTINCT o.canonical_name) AS organisms,
-       collect(DISTINCT dis.canonical_name) AS diseases,
-       m.source_papers AS sources
+MATCH (a:Label {canonical_name: "name"})-[r]->(b)
+RETURN a.canonical_name AS entity,
+       type(r) AS relationship,
+       labels(b)[0] AS related_type,
+       b.canonical_name AS related_name,
+       r.source_papers AS sources
 ```
 
-### Drugs that Treat a Disease
+### Reverse Traversal
 
 ```cypher
-MATCH (d:Drug)<-[:CHARACTERIZES]-(m:Model)-[:TREATS]->(dis:Disease {canonical_name: "hypercholesterolemia"})
-RETURN DISTINCT d.canonical_name AS drug,
-       d.drug_type AS type,
-       d.source_papers AS sources
-```
-
-### Cross-Entity Traversal
-
-```cypher
-MATCH (d:Drug)<-[:CHARACTERIZES]-(m:Model)-[:TREATS]->(dis:Disease {canonical_name: "hypercholesterolemia"})
-RETURN d.canonical_name AS drug,
-       m.canonical_name AS model,
-       m.source_papers AS sources
+MATCH (a:Label)<-[r]-(b)
+WHERE a.canonical_name = "name"
+RETURN b.canonical_name AS related,
+       labels(b)[0] AS type,
+       type(r) AS relationship,
+       r.source_papers AS sources
 ```
 
 ### Fuzzy Name Search
 
 ```cypher
-CALL db.index.fulltext.queryNodes("drug_fulltext", "aliro*")
+CALL db.index.fulltext.queryNodes("label_fulltext", "partial*")
 YIELD node, score
 WHERE score > 0.5
-RETURN node.canonical_name AS drug, score
+RETURN node.canonical_name AS name, labels(node)[0] AS label, score
 ORDER BY score DESC
 ```
 
-### Aggregation — Papers per Drug
+### Aggregation — Papers per Entity
 
 ```cypher
-MATCH (d:Drug)
-RETURN d.canonical_name AS drug,
-       size(d.source_papers) AS paper_count,
-       d.source_papers AS papers
+MATCH (n:Label)
+RETURN n.canonical_name AS name,
+       size(n.source_papers) AS paper_count,
+       n.source_papers AS papers
 ORDER BY paper_count DESC
 ```
 
 ### Edge Provenance
 
 ```cypher
-MATCH (m:Model)-[r:CHARACTERIZES]->(d:Drug)
-RETURN m.canonical_name AS model,
-       d.canonical_name AS drug,
+MATCH (a)-[r]->(b)
+RETURN a.canonical_name AS source,
+       type(r) AS relationship,
+       b.canonical_name AS target,
        r.source_papers AS asserted_by,
        r.extraction_source AS loaded_from
+LIMIT 20
 ```
 
 ### Multi-Paper Entities
@@ -144,14 +118,23 @@ RETURN labels(n)[0] AS label,
        n.source_papers AS papers
 ```
 
-### Model Parameters
+### Cross-Entity Traversal
+
+Chain relationships through a hub node to find indirect connections:
 
 ```cypher
-MATCH (m:Model {canonical_name: "alirocumab_popPK_two_compartment_tmdd_qss"})
-RETURN m.canonical_name AS model,
-       m.mathematical_equations AS equations,
-       m.parameter_means AS params,
-       m.parameter_iiv_std_dev AS iiv
+MATCH (a:LabelA)<-[:REL1]-(hub:HubLabel)-[:REL2]->(b:LabelB {canonical_name: "name"})
+RETURN a.canonical_name AS result,
+       hub.canonical_name AS via,
+       hub.source_papers AS sources
+```
+
+### All Nodes of a Type
+
+```cypher
+MATCH (n:Label)
+RETURN n.canonical_name AS name, n.source_papers AS sources
+ORDER BY n.canonical_name
 ```
 
 ## Response Format
@@ -164,28 +147,26 @@ Always structure responses with provenance:
 
 Example:
 
-> There are 2 PK models for alirocumab in the knowledge graph:
+> There are 2 matching entities in the knowledge graph:
 >
-> | Model | Type | Diseases |
+> | Name | Type | Related |
 > |---|---|---|
-> | alirocumab_popPK_two_compartment_tmdd_qss | two_compartment_tmdd_qss | hypercholesterolemia, familial_hypercholesterolemia |
-> | alirocumab_popPK_two_compartment_michaelis_menten | two_compartment_michaelis_menten | hypercholesterolemia |
+> | entity_a | type_x | related_1, related_2 |
+> | entity_b | type_y | related_3 |
 >
 > Sources:
-> - 10.1007/s40262-016-0505-1
-> - 10.1007/s40262-018-0669-y
+> - 10.xxxx/paper-1
+> - 10.xxxx/paper-2
 
 ## Quick Reference
 
 | User asks about... | Query pattern |
 |---|---|
-| Drug lookup | `MATCH (d:Drug {canonical_name: $name})` |
-| Models for a drug | `(m:Model)-[:CHARACTERIZES]->(d:Drug)` |
-| Model type | `(m:Model)-[:IS_TYPE]->(t:Type)` |
-| Diseases treated | `(m:Model)-[:TREATS]->(dis:Disease)` |
-| Organisms studied | `(m:Model)-[:STUDIED_IN]->(o:Organism)` |
-| Model comparison | Multiple model matches + parameter comparison |
-| Cross-entity | Chain relationships through Model hub node |
+| Entity lookup | `MATCH (n:Label {canonical_name: $name})` |
+| Related entities | Traverse relationship from/to the entity |
+| All of a type | `MATCH (n:Label) RETURN n.canonical_name` |
+| Entity comparison | Multiple matches + property comparison |
+| Cross-entity | Chain relationships through hub node |
 | "Which papers..." | Return `source_papers` from nodes or relationships |
 | Fuzzy/partial name | Use fulltext index with wildcards |
-| Model parameters | Return `parameter_means`, `parameter_iiv_std_dev` |
+| Graph summary | `RETURN labels(n)[0], count(n)` grouped |

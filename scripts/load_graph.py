@@ -3,14 +3,16 @@
 load_graph.py — Deterministic Neo4j loader (NO LLM)
 
 Reads extraction JSON files and loads entities/relationships into Neo4j
-using cypher-shell subprocess calls. Performs entity resolution via a
-5-step cascade (exact, case-insensitive, alias, fuzzy, create new).
+using cypher-shell subprocess calls. Parses the schema file to create
+constraints/indexes, and performs entity resolution via a 5-step cascade
+(exact, case-insensitive, alias, fuzzy, create new).
+
+Schema-driven: works with any schema, not hardcoded to a specific domain.
 
 Usage:
-    python3 scripts/load_graph.py --init-schema
-    python3 scripts/load_graph.py output/paper_extraction.json
-    python3 scripts/load_graph.py output/*.json
-    python3 scripts/load_graph.py --init-schema output/*.json
+    python3 scripts/load_graph.py --schema schema/pk_schema.md --init-schema
+    python3 scripts/load_graph.py --schema schema/pk_schema.md output/paper_extraction.json
+    python3 scripts/load_graph.py --schema schema/pk_schema.md output/*.json
 """
 
 import argparse
@@ -36,7 +38,6 @@ FUZZY_THRESHOLD = 0.85
 
 def run_cypher(query, params=None):
     """Execute a Cypher query via cypher-shell and return stdout."""
-    # Build parameter string for cypher-shell
     cmd = [
         "cypher-shell",
         "-u", NEO4J_USER,
@@ -45,13 +46,11 @@ def run_cypher(query, params=None):
         "--format", "plain",
     ]
 
-    # cypher-shell accepts parameters via --param key=value
     if params:
         for key, value in params.items():
             if isinstance(value, str):
                 cmd.extend(["--param", f'{key} => "{_escape(value)}"'])
             elif isinstance(value, list):
-                # Format list as Cypher literal
                 items = ", ".join(
                     f'"{_escape(v)}"' if isinstance(v, str) else str(v)
                     for v in value
@@ -72,7 +71,6 @@ def run_cypher(query, params=None):
 
     if result.returncode != 0:
         stderr = result.stderr.strip()
-        # Ignore "already exists" errors for constraints/indexes
         if "already exists" in stderr.lower() or "equivalent" in stderr.lower():
             return result.stdout
         print(f"  [ERROR] Cypher failed: {stderr}", file=sys.stderr)
@@ -87,40 +85,72 @@ def _escape(s):
     return s.replace("\\", "\\\\").replace('"', '\\"').replace("'", "\\'")
 
 
+# --- Schema Parsing ---
+
+
+def parse_schema(schema_path):
+    """
+    Parse a schema markdown file to extract labels, constraints, and fulltext indexes.
+
+    Returns:
+        {
+            "labels": ["Drug", "Model", ...],
+            "constraints": ["CREATE CONSTRAINT ... ;", ...],
+            "fulltext_indexes": ["CREATE FULLTEXT INDEX ... ;", ...],
+        }
+    """
+    text = Path(schema_path).read_text()
+    result = {"labels": [], "constraints": [], "fulltext_indexes": []}
+
+    # Extract labels from **Label** (description) lines
+    for m in re.finditer(r'^\*\*(\w+)\*\*', text, re.MULTILINE):
+        label = m.group(1)
+        if label not in result["labels"]:
+            result["labels"].append(label)
+
+    # Parse constraints: `Label.property` — UNIQUE
+    for m in re.finditer(r'`(\w+)\.(\w+)`\s*—\s*UNIQUE', text):
+        label, prop = m.group(1), m.group(2)
+        name = f"{label.lower()}_{prop}"
+        stmt = (
+            f"CREATE CONSTRAINT {name} IF NOT EXISTS "
+            f"FOR (n:{label}) REQUIRE n.{prop} IS UNIQUE;"
+        )
+        result["constraints"].append(stmt)
+
+    # Parse fulltext indexes: `index_name` on Label: `[prop1, prop2]`
+    for m in re.finditer(r'`(\w+)`\s+on\s+(\w+):\s*`\[([^\]]+)\]`', text):
+        idx_name, label, props_str = m.group(1), m.group(2), m.group(3)
+        props = [p.strip() for p in props_str.split(",")]
+        prop_list = ", ".join(f"n.{p}" for p in props)
+        stmt = (
+            f"CREATE FULLTEXT INDEX {idx_name} IF NOT EXISTS "
+            f"FOR (n:{label}) ON EACH [{prop_list}];"
+        )
+        result["fulltext_indexes"].append(stmt)
+
+    return result
+
+
 # --- Schema Initialization ---
 
-CONSTRAINTS = [
-    'CREATE CONSTRAINT drug_canonical IF NOT EXISTS FOR (n:Drug) REQUIRE n.canonical_name IS UNIQUE;',
-    'CREATE CONSTRAINT model_canonical IF NOT EXISTS FOR (n:Model) REQUIRE n.canonical_name IS UNIQUE;',
-    'CREATE CONSTRAINT type_canonical IF NOT EXISTS FOR (n:Type) REQUIRE n.canonical_name IS UNIQUE;',
-    'CREATE CONSTRAINT organism_canonical IF NOT EXISTS FOR (n:Organism) REQUIRE n.canonical_name IS UNIQUE;',
-    'CREATE CONSTRAINT disease_canonical IF NOT EXISTS FOR (n:Disease) REQUIRE n.canonical_name IS UNIQUE;',
-]
 
-FULLTEXT_INDEXES = [
-    'CREATE FULLTEXT INDEX drug_fulltext IF NOT EXISTS FOR (n:Drug) ON EACH [n.canonical_name, n.drug_name];',
-    'CREATE FULLTEXT INDEX model_fulltext IF NOT EXISTS FOR (n:Model) ON EACH [n.canonical_name];',
-    'CREATE FULLTEXT INDEX type_fulltext IF NOT EXISTS FOR (n:Type) ON EACH [n.canonical_name, n.model_type];',
-    'CREATE FULLTEXT INDEX organism_fulltext IF NOT EXISTS FOR (n:Organism) ON EACH [n.canonical_name, n.organism];',
-    'CREATE FULLTEXT INDEX disease_fulltext IF NOT EXISTS FOR (n:Disease) ON EACH [n.canonical_name, n.name];',
-]
-
-
-def init_schema():
-    """Create constraints and fulltext indexes (idempotent)."""
+def init_schema(schema_info):
+    """Create constraints and fulltext indexes from parsed schema (idempotent)."""
     print("=== Initializing Schema ===")
-    for stmt in CONSTRAINTS:
-        run_cypher(stmt)
-    print(f"  Created/verified {len(CONSTRAINTS)} constraints")
 
-    for stmt in FULLTEXT_INDEXES:
+    for stmt in schema_info["constraints"]:
         run_cypher(stmt)
-    print(f"  Created/verified {len(FULLTEXT_INDEXES)} fulltext indexes")
+    print(f"  Created/verified {len(schema_info['constraints'])} constraints")
+
+    for stmt in schema_info["fulltext_indexes"]:
+        run_cypher(stmt)
+    print(f"  Created/verified {len(schema_info['fulltext_indexes'])} fulltext indexes")
 
     # Verify
     out = run_cypher("SHOW CONSTRAINTS;")
     if out:
-        count = len([l for l in out.strip().split("\n") if l.strip()]) - 1  # minus header
+        count = len([l for l in out.strip().split("\n") if l.strip()]) - 1
         print(f"  Verified: {max(count, 0)} constraints in DB")
 
     out = run_cypher("SHOW INDEXES;")
@@ -133,10 +163,10 @@ def init_schema():
 # --- Entity Resolution ---
 
 
-def load_existing_nodes():
+def load_existing_nodes(labels):
     """Load all existing nodes from Neo4j into an in-memory registry."""
-    registry = {}  # {label: [{canonical_name, aliases}, ...]}
-    for label in ["Drug", "Model", "Type", "Organism", "Disease"]:
+    registry = {}
+    for label in labels:
         query = f"""
 MATCH (n:{label})
 RETURN n.canonical_name AS name, coalesce(n.aliases, []) AS aliases
@@ -144,18 +174,16 @@ RETURN n.canonical_name AS name, coalesce(n.aliases, []) AS aliases
         out = run_cypher(query)
         nodes = []
         if out:
-            for line in out.strip().split("\n")[1:]:  # skip header
+            for line in out.strip().split("\n")[1:]:
                 line = line.strip()
                 if not line:
                     continue
-                # Parse plain format: name, aliases
                 parts = line.split(", [")
                 if len(parts) == 2:
                     name = parts[0].strip().strip('"')
                     alias_str = parts[1].rstrip("]").strip()
                     aliases = [a.strip().strip('"') for a in alias_str.split(",") if a.strip().strip('"')]
                 elif line.strip():
-                    # Single column or no aliases
                     name = line.split(",")[0].strip().strip('"')
                     aliases = []
                 else:
@@ -207,107 +235,56 @@ def resolve_entity(entity, registry):
     return name, "create_new"
 
 
-# --- Node MERGE ---
+# --- Generic Node MERGE ---
 
 
-def merge_node(entity, doi, json_filename, is_new):
-    """MERGE a single node into Neo4j following write-patterns.md."""
+def _cypher_value(val):
+    """Convert a Python value to a Cypher literal string."""
+    if isinstance(val, str):
+        return f'"{_escape(val)}"'
+    elif isinstance(val, list):
+        items = ", ".join(_cypher_value(v) for v in val)
+        return f"[{items}]"
+    elif isinstance(val, bool):
+        return "true" if val else "false"
+    elif isinstance(val, (int, float)):
+        return str(val)
+    elif val is None:
+        return "null"
+    else:
+        # Fallback: serialize as JSON string
+        return f'"{_escape(json.dumps(val))}"'
+
+
+def merge_node(entity, doi, json_filename):
+    """MERGE a single node into Neo4j. Schema-agnostic: reads label and properties from the entity."""
     label = entity["label"]
     name = entity["canonical_name"]
     props = entity.get("properties", {})
 
-    if label == "Drug":
-        aliases_val = props.get("aliases", [])
-        aliases_cypher = ", ".join(f'"{_escape(a)}"' for a in aliases_val)
-        query = f"""
-MERGE (n:Drug {{canonical_name: "{_escape(name)}"}})
-ON CREATE SET
-  n.drug_name = "{_escape(props.get('drug_name', name))}",
-  n.drug_type = "{_escape(props.get('drug_type', ''))}",
-  n.aliases = [{aliases_cypher}],
-  n.source_papers = ["{_escape(doi)}"],
-  n.created_at = datetime()
-ON MATCH SET
-  n.source_papers = CASE
-    WHEN NOT "{_escape(doi)}" IN n.source_papers
-    THEN n.source_papers + "{_escape(doi)}"
-    ELSE n.source_papers
-  END
-"""
-    elif label == "Model":
-        equations = props.get("mathematical_equations", [])
-        eq_cypher = ", ".join(f'"{_escape(e)}"' for e in equations)
-        param_means = props.get("parameter_means", "{}")
-        param_iiv = props.get("parameter_iiv_std_dev", "{}")
-        # Ensure these are JSON strings, not dicts
-        if isinstance(param_means, dict):
-            param_means = json.dumps(param_means)
-        if isinstance(param_iiv, dict):
-            param_iiv = json.dumps(param_iiv)
-        query = f"""
-MERGE (n:Model {{canonical_name: "{_escape(name)}"}})
-ON CREATE SET
-  n.mathematical_equations = [{eq_cypher}],
-  n.parameter_means = '{_escape(param_means)}',
-  n.parameter_iiv_std_dev = '{_escape(param_iiv)}',
-  n.source_papers = ["{_escape(doi)}"],
-  n.created_at = datetime()
-ON MATCH SET
-  n.source_papers = CASE
-    WHEN NOT "{_escape(doi)}" IN n.source_papers
-    THEN n.source_papers + "{_escape(doi)}"
-    ELSE n.source_papers
-  END
-"""
-    elif label == "Type":
-        query = f"""
-MERGE (n:Type {{canonical_name: "{_escape(name)}"}})
-ON CREATE SET
-  n.model_type = "{_escape(props.get('model_type', name))}",
-  n.source_papers = ["{_escape(doi)}"],
-  n.created_at = datetime()
-ON MATCH SET
-  n.source_papers = CASE
-    WHEN NOT "{_escape(doi)}" IN n.source_papers
-    THEN n.source_papers + "{_escape(doi)}"
-    ELSE n.source_papers
-  END
-"""
-    elif label == "Organism":
-        query = f"""
-MERGE (n:Organism {{canonical_name: "{_escape(name)}"}})
-ON CREATE SET
-  n.organism = "{_escape(props.get('organism', name))}",
-  n.source_papers = ["{_escape(doi)}"],
-  n.created_at = datetime()
-ON MATCH SET
-  n.source_papers = CASE
-    WHEN NOT "{_escape(doi)}" IN n.source_papers
-    THEN n.source_papers + "{_escape(doi)}"
-    ELSE n.source_papers
-  END
-"""
-    elif label == "Disease":
-        aliases_val = props.get("aliases", [])
-        aliases_cypher = ", ".join(f'"{_escape(a)}"' for a in aliases_val)
-        query = f"""
-MERGE (n:Disease {{canonical_name: "{_escape(name)}"}})
-ON CREATE SET
-  n.name = "{_escape(props.get('name', name))}",
-  n.aliases = [{aliases_cypher}],
-  n.source_papers = ["{_escape(doi)}"],
-  n.created_at = datetime()
-ON MATCH SET
-  n.source_papers = CASE
-    WHEN NOT "{_escape(doi)}" IN n.source_papers
-    THEN n.source_papers + "{_escape(doi)}"
-    ELSE n.source_papers
-  END
-"""
-    else:
-        print(f"  [WARN] Unknown label: {label}", file=sys.stderr)
-        return False
+    # Build ON CREATE SET clauses from all properties
+    create_sets = []
+    for key, val in props.items():
+        # If the value is a dict, serialize as JSON string (Neo4j doesn't support map properties)
+        if isinstance(val, dict):
+            val = json.dumps(val)
+        create_sets.append(f"  n.{key} = {_cypher_value(val)}")
+    create_sets.append(f'  n.source_papers = ["{_escape(doi)}"]')
+    create_sets.append(f"  n.created_at = datetime()")
 
+    create_clause = ",\n".join(create_sets)
+
+    query = f"""
+MERGE (n:{label} {{canonical_name: "{_escape(name)}"}})
+ON CREATE SET
+{create_clause}
+ON MATCH SET
+  n.source_papers = CASE
+    WHEN NOT "{_escape(doi)}" IN n.source_papers
+    THEN n.source_papers + "{_escape(doi)}"
+    ELSE n.source_papers
+  END
+"""
     result = run_cypher(query)
     return result is not None
 
@@ -366,7 +343,7 @@ SET n.dedup_candidate = true,
 # --- Main Loading Logic ---
 
 
-def load_json(json_path):
+def load_json(json_path, labels):
     """Load a single extraction JSON into Neo4j."""
     json_path = Path(json_path)
     json_filename = json_path.name
@@ -388,7 +365,7 @@ def load_json(json_path):
     entities_by_id = {e["entity_id"]: e for e in entities}
 
     # Load existing nodes for entity resolution
-    registry = load_existing_nodes()
+    registry = load_existing_nodes(labels)
 
     # Stats
     stats = {
@@ -407,23 +384,20 @@ def load_json(json_path):
 
         if action == "create_new":
             stats["created"] += 1
-            is_new = True
             print(f"  [NEW]   {entity['label']:10} {entity['canonical_name']}")
         elif action == "fuzzy_match":
             stats["fuzzy_flagged"] += 1
             stats["matched"] += 1
-            is_new = False
             print(f"  [FUZZY] {entity['label']:10} {entity['canonical_name']} -> {resolved_name}")
         else:
             stats["matched"] += 1
-            is_new = False
             print(f"  [MATCH] {entity['label']:10} {entity['canonical_name']} ({action})")
 
         # Update entity canonical_name to resolved name
         entity["canonical_name"] = resolved_name
 
         # MERGE node
-        success = merge_node(entity, doi, json_filename, is_new)
+        success = merge_node(entity, doi, json_filename)
         if not success:
             stats["merge_failed"] += 1
 
@@ -541,6 +515,11 @@ def main():
         help="Path(s) to extraction JSON files",
     )
     parser.add_argument(
+        "--schema",
+        default="schema/pk_schema.md",
+        help="Path to schema markdown file (default: schema/pk_schema.md)",
+    )
+    parser.add_argument(
         "--init-schema",
         action="store_true",
         help="Create constraints and fulltext indexes",
@@ -551,8 +530,23 @@ def main():
         parser.print_help()
         sys.exit(1)
 
+    # Parse schema
+    schema_path = Path(args.schema)
+    if not schema_path.exists():
+        print(f"[ERROR] Schema file not found: {args.schema}", file=sys.stderr)
+        sys.exit(1)
+
+    schema_info = parse_schema(schema_path)
+    labels = schema_info["labels"]
+
+    if not labels:
+        print(f"[ERROR] No labels found in schema: {args.schema}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Schema: {args.schema} ({len(labels)} labels: {', '.join(labels)})")
+
     if args.init_schema:
-        init_schema()
+        init_schema(schema_info)
 
     if not args.json_files:
         return
@@ -570,7 +564,7 @@ def main():
             print(f"[WARN] Skipping non-JSON file: {json_path}", file=sys.stderr)
             continue
         try:
-            stats = load_json(json_path)
+            stats = load_json(json_path, labels)
             all_stats.append((json_path, stats))
         except Exception as e:
             print(f"[ERROR] Failed to load {json_path}: {e}", file=sys.stderr)
@@ -597,9 +591,6 @@ def main():
         print(f"\n  Failed files:")
         for f in failed:
             print(f"    - {f}")
-
-    # Exit with error if any failures
-    if failed:
         sys.exit(1)
 
 
