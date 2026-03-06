@@ -161,7 +161,7 @@ def _cypher_value(val):
         return f'"{_escape(json.dumps(val))}"'
 
 
-def merge_node(entity, doi, json_filename):
+def merge_node(entity, paper_title):
     """MERGE a single node into Neo4j. Reads label and properties from the entity."""
     label = entity["label"]
     name = entity["canonical_name"]
@@ -174,7 +174,7 @@ def merge_node(entity, doi, json_filename):
         if isinstance(val, dict):
             val = json.dumps(val)
         create_sets.append(f"  n.{key} = {_cypher_value(val)}")
-    create_sets.append(f'  n.source_papers = ["{_escape(doi)}"]')
+    create_sets.append(f'  n.source_papers = ["{_escape(paper_title)}"]')
     create_sets.append(f"  n.created_at = datetime()")
 
     create_clause = ",\n".join(create_sets)
@@ -185,8 +185,8 @@ ON CREATE SET
 {create_clause}
 ON MATCH SET
   n.source_papers = CASE
-    WHEN NOT "{_escape(doi)}" IN n.source_papers
-    THEN n.source_papers + "{_escape(doi)}"
+    WHEN NOT "{_escape(paper_title)}" IN n.source_papers
+    THEN n.source_papers + "{_escape(paper_title)}"
     ELSE n.source_papers
   END
 """
@@ -197,7 +197,7 @@ ON MATCH SET
 # --- Relationship MERGE ---
 
 
-def merge_relationship(rel, entities_by_id, doi):
+def merge_relationship(rel, entities_by_id, paper_title):
     """MERGE a relationship with full provenance."""
     source_entity = entities_by_id.get(rel["source_entity_id"])
     target_entity = entities_by_id.get(rel["target_entity_id"])
@@ -217,12 +217,12 @@ MATCH (source:{source_label} {{canonical_name: "{_escape(source_name)}"}})
 MATCH (target:{target_label} {{canonical_name: "{_escape(target_name)}"}})
 MERGE (source)-[r:{rel_type}]->(target)
 ON CREATE SET
-  r.source_papers = ["{_escape(doi)}"],
+  r.source_papers = ["{_escape(paper_title)}"],
   r.created_at = datetime()
 ON MATCH SET
   r.source_papers = CASE
-    WHEN NOT "{_escape(doi)}" IN r.source_papers
-    THEN r.source_papers + "{_escape(doi)}"
+    WHEN NOT "{_escape(paper_title)}" IN r.source_papers
+    THEN r.source_papers + "{_escape(paper_title)}"
     ELSE r.source_papers
   END
 """
@@ -236,19 +236,18 @@ ON MATCH SET
 def load_json(json_path):
     """Load a single extraction JSON into Neo4j."""
     json_path = Path(json_path)
-    json_filename = json_path.name
-    print(f"=== Loading: {json_filename} ===")
+    print(f"=== Loading: {json_path.name} ===")
 
     with open(json_path) as f:
         data = json.load(f)
 
     source_paper = data["source_paper"]
-    doi = source_paper["doi"]
+    paper_title = source_paper["title"]
     entities = data["entities"]
     relationships = data["relationships"]
 
-    print(f"  Paper: {source_paper['title'][:80]}...")
-    print(f"  DOI: {doi}")
+    print(f"  Paper: {paper_title[:80]}...")
+    print(f"  DOI: {source_paper.get('doi', 'N/A')}")
     print(f"  Entities: {len(entities)}, Relationships: {len(relationships)}")
 
     # Derive labels from entities in this JSON
@@ -285,7 +284,7 @@ def load_json(json_path):
         entity["canonical_name"] = resolved_name
 
         # MERGE node
-        success = merge_node(entity, doi, json_filename)
+        success = merge_node(entity, paper_title)
         if not success:
             stats["merge_failed"] += 1
 
@@ -305,7 +304,7 @@ def load_json(json_path):
         target = entities_by_id.get(rel["target_entity_id"], {})
         print(f"  ({source.get('canonical_name', '?')})-[:{rel['type']}]->({target.get('canonical_name', '?')})")
 
-        success = merge_relationship(rel, entities_by_id, doi)
+        success = merge_relationship(rel, entities_by_id, paper_title)
         if success:
             stats["rels_created"] += 1
         else:
@@ -314,7 +313,7 @@ def load_json(json_path):
     # --- Phase 3: Verification ---
     print("\n  --- Verification ---")
     out = run_cypher(f"""
-MATCH (n) WHERE "{_escape(doi)}" IN n.source_papers
+MATCH (n) WHERE "{_escape(paper_title)}" IN n.source_papers
 RETURN labels(n)[0] AS label, count(n) AS count
 """)
     if out:
@@ -324,7 +323,7 @@ RETURN labels(n)[0] AS label, count(n) AS count
                 print(f"    {line.strip()}")
 
     out = run_cypher(f"""
-MATCH ()-[r]->() WHERE "{_escape(doi)}" IN r.source_papers
+MATCH ()-[r]->() WHERE "{_escape(paper_title)}" IN r.source_papers
 RETURN type(r) AS rel_type, count(r) AS count
 """)
     if out:
@@ -372,10 +371,10 @@ ORDER BY total DESC
     print("\n  Edge provenance sample (per paper):")
     out = run_cypher("""
 MATCH ()-[r]->()
-UNWIND r.source_papers AS doi
-WITH doi, collect(r)[0] AS r0
-RETURN type(r0) AS rel, r0.source_papers AS papers, doi
-ORDER BY doi
+UNWIND r.source_papers AS title
+WITH title, collect(r)[0] AS r0
+RETURN type(r0) AS rel, r0.source_papers AS papers, title
+ORDER BY title
 """)
     if out:
         for line in out.strip().split("\n"):

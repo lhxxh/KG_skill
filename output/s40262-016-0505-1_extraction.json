@@ -7,7 +7,7 @@
       "Jean-Marie Martinez",
       "Laura Lohan",
       "Sonia Khier",
-      "Aurelie Brunet",
+      "Aurélie Brunet",
       "Fabrice Hurbin",
       "David Fabre"
     ],
@@ -20,39 +20,21 @@
       "canonical_name": "alirocumab_popPK_tmdd_qss_two_compartment",
       "properties": {
         "mathematical_equations": [
-          "Vc * dC/dt = In(t) - CLL * C - Kon * Vc * C * R + Ktp * AT - Kpt * Vc * C",
-          "dAT/dt = Kpt * Vc * C - Ktp * AT",
-          "dR/dt = Ksyn - Kdeg * R - Kint * RC",
-          "RC = (C * R) / KSS",
-          "KSS = (Koff + Kint) / Kon",
-          "Vc = TVVC * COV1^DISST (DISST=0 healthy, DISST=1 patients)"
+          "dC/dt = Ka*Depot/Vc - (CLL/Vc)*C - Kon*C*R + Koff*RC - Kint*RC - (Q/Vc)*C + (Q/Vp)*Cp",
+          "dCp/dt = (Q/Vc)*C - (Q/Vp)*Cp",
+          "dR/dt = Ksyn - Kdeg*R - Kon*C*R + Koff*RC",
+          "QSS assumption: Kss = (Koff + Kint)/Kon, R = Ksyn/(Kdeg + Kon*C)",
+          "Vc = TVVC * COV1^DISST (DISST=0 healthy, 1 patient; initial model n=527)",
+          "CLL = TVCLL * COV1^STATIN (STATIN=1 with statin, 0 without; expanded model n=2870)",
+          "Pi = TVP * (WT/WTmed)^EXP for CLL (EXP=0.75), Q (EXP=0.75), Vc (EXP=1)"
         ],
-        "parameter_means": "{\"CLL\": 0.167, \"CLL_unit\": \"L/day\", \"Kon\": 559, \"Kon_unit\": \"nM-1*day-1\", \"Kint\": 0.125, \"Kint_unit\": \"day-1\", \"Kdeg\": 1.35, \"Kdeg_unit\": \"day-1\", \"Q\": 0.494, \"Q_unit\": \"L/day\", \"Vc_healthy\": 3.16, \"Vc_patients\": 4.93, \"Vc_unit\": \"L\", \"COV1_DISST_on_Vc\": 1.56, \"Vp\": 2.61, \"Vp_unit\": \"L\", \"Ka\": 0.647, \"Ka_unit\": \"day-1\", \"F1\": 0.584, \"LAG\": 0.0298, \"LAG_unit\": \"days\"}",
-        "parameter_iiv_std_dev": "{\"CLL_iiv_cv%\": 50.2, \"Kint_iiv_cv%\": 23.7, \"Kdeg_iiv_cv%\": 41.1, \"Q_iiv_cv%\": 25.7, \"Vc_iiv_cv%\": 30.8, \"Ka_iiv_cv%\": 71.5, \"F1_iiv_cv%\": 54.3}"
+        "parameter_means": "{\"CLL_L_per_day\": 0.176, \"Kon_nM_inv_day_inv\": 559, \"Kint_day_inv\": 0.112, \"Kdeg_day_inv\": 1.10, \"Q_L_per_day\": 0.343, \"Vc_L\": 4.67, \"Ka_day_inv\": 0.307, \"F1\": 0.556, \"LAG_days\": 0.0535, \"STATIN_COV1_on_CLL\": 1.27}",
+        "parameter_iiv_std_dev": "{\"CLL_cv_pct\": 43.9, \"Kint_cv_pct\": 24.9, \"Kdeg_cv_pct\": 46.8, \"Q_cv_pct\": 65.3, \"Vc_cv_pct\": 22.7, \"Ka_cv_pct\": 85.0, \"F1_cv_pct\": 65.8, \"residual_proportional_cv_pct\": 15.2, \"residual_additive_nM\": 10.4}"
       },
       "extraction_confidence": "high"
     },
     {
       "entity_id": "e2",
-      "label": "Model",
-      "canonical_name": "alirocumab_popPK_tmdd_qss_two_compartment_expanded",
-      "properties": {
-        "mathematical_equations": [
-          "Vc * dC/dt = In(t) - CLL * C - Kon * Vc * C * R + Ktp * AT - Kpt * Vc * C",
-          "dAT/dt = Kpt * Vc * C - Ktp * AT",
-          "dR/dt = Ksyn - Kdeg * R - Kint * RC",
-          "RC = (C * R) / KSS",
-          "KSS = (Koff + Kint) / Kon",
-          "Pi = TVP * (WT / WTmed)^EXP (allometric scaling: EXP=1 for Vc, EXP=0.75 for CLL and Q)",
-          "CLL = TVCLL * COV1^STATIN (STATIN=1 with statins, STATIN=0 without statins)"
-        ],
-        "parameter_means": "{\"CLL\": 0.176, \"CLL_unit\": \"L/day\", \"CLL_with_statins\": 0.224, \"COV1_STATIN_on_CLL\": 1.27, \"Kon\": 559, \"Kon_unit\": \"nM-1*day-1\", \"Kint\": 0.112, \"Kint_unit\": \"day-1\", \"Kdeg\": 1.10, \"Kdeg_unit\": \"day-1\", \"Q\": 0.343, \"Q_unit\": \"L/day\", \"Vc\": 4.67, \"Vc_unit\": \"L\", \"Vp\": 2.61, \"Vp_unit\": \"L\", \"Ka\": 0.307, \"Ka_unit\": \"day-1\", \"F1\": 0.556, \"LAG\": 0.0355, \"LAG_unit\": \"days\"}",
-        "parameter_iiv_std_dev": "{\"CLL_iiv_cv%\": 43.9, \"Kint_iiv_cv%\": 24.9, \"Kdeg_iiv_cv%\": 46.8, \"Q_iiv_cv%\": 65.3, \"Vc_iiv_cv%\": 22.7, \"Ka_iiv_cv%\": 85.0, \"F1_iiv_cv%\": 65.8}"
-      },
-      "extraction_confidence": "high"
-    },
-    {
-      "entity_id": "e3",
       "label": "Type",
       "canonical_name": "two_compartment_tmdd_qss",
       "properties": {
@@ -61,18 +43,18 @@
       "extraction_confidence": "high"
     },
     {
-      "entity_id": "e4",
+      "entity_id": "e3",
       "label": "Drug",
       "canonical_name": "alirocumab",
       "properties": {
         "drug_name": "alirocumab",
         "drug_type": "monoclonal_antibody",
-        "aliases": ["Praluent", "SAR236553", "REGN727"]
+        "aliases": ["Praluent", "REGN727", "SAR236553"]
       },
       "extraction_confidence": "high"
     },
     {
-      "entity_id": "e5",
+      "entity_id": "e4",
       "label": "Organism",
       "canonical_name": "human",
       "properties": {
@@ -81,22 +63,22 @@
       "extraction_confidence": "high"
     },
     {
-      "entity_id": "e6",
+      "entity_id": "e5",
       "label": "Disease",
       "canonical_name": "hypercholesterolemia",
       "properties": {
         "name": "hypercholesterolemia",
-        "aliases": ["dyslipidemia", "non-FH hypercholesterolemia"]
+        "aliases": ["HCL", "high cholesterol"]
       },
       "extraction_confidence": "high"
     },
     {
-      "entity_id": "e7",
+      "entity_id": "e6",
       "label": "Disease",
       "canonical_name": "familial_hypercholesterolemia",
       "properties": {
         "name": "familial hypercholesterolemia",
-        "aliases": ["FH", "HeFH", "heterozygous familial hypercholesterolemia"]
+        "aliases": ["FH", "heterozygous familial hypercholesterolemia", "HeFH"]
       },
       "extraction_confidence": "high"
     }
@@ -105,62 +87,32 @@
     {
       "type": "IS_TYPE",
       "source_entity_id": "e1",
-      "target_entity_id": "e3",
-      "source_paper": "paper/s40262-016-0505-1.pdf"
-    },
-    {
-      "type": "IS_TYPE",
-      "source_entity_id": "e2",
-      "target_entity_id": "e3",
-      "source_paper": "paper/s40262-016-0505-1.pdf"
+      "target_entity_id": "e2",
+      "source_paper": "Target-Mediated Drug Disposition Population Pharmacokinetics Model of Alirocumab in Healthy Volunteers and Patients: Pooled Analysis of Randomized Phase I/II/III Studies"
     },
     {
       "type": "CHARACTERIZES",
       "source_entity_id": "e1",
-      "target_entity_id": "e4",
-      "source_paper": "paper/s40262-016-0505-1.pdf"
-    },
-    {
-      "type": "CHARACTERIZES",
-      "source_entity_id": "e2",
-      "target_entity_id": "e4",
-      "source_paper": "paper/s40262-016-0505-1.pdf"
+      "target_entity_id": "e3",
+      "source_paper": "Target-Mediated Drug Disposition Population Pharmacokinetics Model of Alirocumab in Healthy Volunteers and Patients: Pooled Analysis of Randomized Phase I/II/III Studies"
     },
     {
       "type": "STUDIED_IN",
       "source_entity_id": "e1",
-      "target_entity_id": "e5",
-      "source_paper": "paper/s40262-016-0505-1.pdf"
+      "target_entity_id": "e4",
+      "source_paper": "Target-Mediated Drug Disposition Population Pharmacokinetics Model of Alirocumab in Healthy Volunteers and Patients: Pooled Analysis of Randomized Phase I/II/III Studies"
     },
     {
-      "type": "STUDIED_IN",
-      "source_entity_id": "e2",
+      "type": "TREATS",
+      "source_entity_id": "e1",
       "target_entity_id": "e5",
-      "source_paper": "paper/s40262-016-0505-1.pdf"
+      "source_paper": "Target-Mediated Drug Disposition Population Pharmacokinetics Model of Alirocumab in Healthy Volunteers and Patients: Pooled Analysis of Randomized Phase I/II/III Studies"
     },
     {
       "type": "TREATS",
       "source_entity_id": "e1",
       "target_entity_id": "e6",
-      "source_paper": "paper/s40262-016-0505-1.pdf"
-    },
-    {
-      "type": "TREATS",
-      "source_entity_id": "e1",
-      "target_entity_id": "e7",
-      "source_paper": "paper/s40262-016-0505-1.pdf"
-    },
-    {
-      "type": "TREATS",
-      "source_entity_id": "e2",
-      "target_entity_id": "e6",
-      "source_paper": "paper/s40262-016-0505-1.pdf"
-    },
-    {
-      "type": "TREATS",
-      "source_entity_id": "e2",
-      "target_entity_id": "e7",
-      "source_paper": "paper/s40262-016-0505-1.pdf"
+      "source_paper": "Target-Mediated Drug Disposition Population Pharmacokinetics Model of Alirocumab in Healthy Volunteers and Patients: Pooled Analysis of Randomized Phase I/II/III Studies"
     }
   ]
 }

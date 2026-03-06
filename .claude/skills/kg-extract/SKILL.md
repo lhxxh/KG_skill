@@ -68,7 +68,7 @@ Write the extraction result to `output/{pdf_stem}_extraction.json`:
       "type": "REL_TYPE",
       "source_entity_id": "e1",
       "target_entity_id": "e2",
-      "source_paper": "paper/filename.pdf"
+      "source_paper": "paper title"
     }
   ]
 }
@@ -79,7 +79,7 @@ Write the extraction result to `output/{pdf_stem}_extraction.json`:
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
 | `source_paper.title` | string | yes | Full paper title |
-| `source_paper.doi` | string | yes | DOI string |
+| `source_paper.doi` | string | no | DOI string (if available) |
 | `source_paper.authors` | string[] | yes | Author names |
 | `source_paper.year` | int | yes | Publication year |
 | `entities[].entity_id` | string | yes | Unique within file (e1, e2, ...) |
@@ -90,7 +90,7 @@ Write the extraction result to `output/{pdf_stem}_extraction.json`:
 | `relationships[].type` | string | yes | Must match a relationship type from the schema |
 | `relationships[].source_entity_id` | string | yes | References an entity_id |
 | `relationships[].target_entity_id` | string | yes | References an entity_id |
-| `relationships[].source_paper` | string | yes | File path of the paper being processed (e.g., `paper/filename.pdf`) |
+| `relationships[].source_paper` | string | yes | Full title of the paper being processed |
 
 ## Important Rules
 
