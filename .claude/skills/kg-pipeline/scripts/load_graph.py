@@ -197,7 +197,7 @@ ON MATCH SET
 # --- Relationship MERGE ---
 
 
-def merge_relationship(rel, entities_by_id, doi, json_filename):
+def merge_relationship(rel, entities_by_id, doi):
     """MERGE a relationship with full provenance."""
     source_entity = entities_by_id.get(rel["source_entity_id"])
     target_entity = entities_by_id.get(rel["target_entity_id"])
@@ -218,7 +218,6 @@ MATCH (target:{target_label} {{canonical_name: "{_escape(target_name)}"}})
 MERGE (source)-[r:{rel_type}]->(target)
 ON CREATE SET
   r.source_papers = ["{_escape(doi)}"],
-  r.extraction_source = "{_escape(json_filename)}",
   r.created_at = datetime()
 ON MATCH SET
   r.source_papers = CASE
@@ -306,7 +305,7 @@ def load_json(json_path):
         target = entities_by_id.get(rel["target_entity_id"], {})
         print(f"  ({source.get('canonical_name', '?')})-[:{rel['type']}]->({target.get('canonical_name', '?')})")
 
-        success = merge_relationship(rel, entities_by_id, doi, json_filename)
+        success = merge_relationship(rel, entities_by_id, doi)
         if success:
             stats["rels_created"] += 1
         else:
@@ -369,12 +368,14 @@ ORDER BY total DESC
             if line.strip():
                 print(f"  {line.strip()}")
 
-    # Edge provenance check
-    print("\n  Edge provenance sample:")
+    # Edge provenance check — one sample per source paper
+    print("\n  Edge provenance sample (per paper):")
     out = run_cypher("""
 MATCH ()-[r]->()
-RETURN type(r) AS rel, r.source_papers AS papers, r.extraction_source AS source
-LIMIT 5
+UNWIND r.source_papers AS doi
+WITH doi, collect(r)[0] AS r0
+RETURN type(r0) AS rel, r0.source_papers AS papers, doi
+ORDER BY doi
 """)
     if out:
         for line in out.strip().split("\n"):

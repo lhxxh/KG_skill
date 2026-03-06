@@ -20,34 +20,34 @@
       "properties": {
         "drug_name": "alirocumab",
         "drug_type": "monoclonal_antibody",
-        "aliases": ["Praluent", "REGN727", "SAR236553"]
+        "aliases": ["praluent", "REGN727", "SAR236553"]
       },
       "extraction_confidence": "high"
     },
     {
       "entity_id": "e2",
-      "label": "Type",
-      "canonical_name": "two_compartment_michaelis_menten",
-      "properties": {
-        "model_type": "two_compartment_michaelis_menten"
-      },
-      "extraction_confidence": "high"
-    },
-    {
-      "entity_id": "e3",
       "label": "Model",
       "canonical_name": "alirocumab_popPK_two_compartment_michaelis_menten",
       "properties": {
         "mathematical_equations": [
           "dA_depot/dt = -Ka * A_depot",
-          "dA_central/dt = Ka * A_depot - (CLL/V2)*A_central - (Vm*C)/(Km+C) - Q*(C - A_peripheral/V3)",
-          "dA_peripheral/dt = Q*(C - A_peripheral/V3)",
-          "CLL = TVCLL + COV1*(WT - 82.9) + COV2*STATIN",
-          "Km = TVKm + COV3*(FPCSK9/72.9)",
-          "V3 = TVV3*(AGE/60)^COV4"
+          "dA_central/dt = Ka * A_depot - (CLL/V2) * A_central - Vm * (A_central/V2) / (Km + A_central/V2) - (Q/V2) * A_central + (Q/V3) * A_peripheral",
+          "dA_peripheral/dt = (Q/V2) * A_central - (Q/V3) * A_peripheral",
+          "CLL = TVCLL + COV1 * (WT - 82.9) + COV2 * STATIN",
+          "Km = TVKm + COV3 * (FPCSK9 / 72.9)",
+          "V3 = TVV3 * (AGE / 60) ^ COV4"
         ],
         "parameter_means": "{\"CLL_L_per_h\": 0.0124, \"V2_L\": 3.19, \"Ka_1_per_h\": 0.00768, \"V3_L\": 2.79, \"Q_L_per_h\": 0.0185, \"Vm_mg_per_h\": 0.183, \"Km_mg_per_L\": 7.73, \"F\": 0.862, \"LAG_h\": 0.641, \"COV1_WT_on_CLL\": 0.000292, \"COV2_STATIN_on_CLL\": 0.00644, \"COV3_FPCSK9_on_Km\": -0.541, \"COV4_AGE_on_V3\": 0.310}",
-        "parameter_iiv_std_dev": "{\"CLL_iiv_cv%\": 48.2, \"V2_iiv_cv%\": 76.7, \"V3_iiv_cv%\": 27.1, \"Km_iiv_cv%\": 54.6, \"F_iiv_cv%\": 103.0}"
+        "parameter_iiv_std_dev": "{\"CLL_iiv_cv%\": 48.2, \"V2_iiv_cv%\": 76.7, \"V3_iiv_cv%\": 27.1, \"Km_iiv_cv%\": 54.6, \"F_iiv_cv%\": 103}"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e3",
+      "label": "Type",
+      "canonical_name": "two_compartment_michaelis_menten",
+      "properties": {
+        "model_type": "two_compartment_michaelis_menten"
       },
       "extraction_confidence": "high"
     },
@@ -66,7 +66,7 @@
       "canonical_name": "hypercholesterolemia",
       "properties": {
         "name": "hypercholesterolemia",
-        "aliases": ["HC", "high cholesterol"]
+        "aliases": ["HC", "non-FH hypercholesterolemia"]
       },
       "extraction_confidence": "high"
     },
@@ -79,38 +79,54 @@
         "aliases": ["FH", "heterozygous familial hypercholesterolemia", "HeFH"]
       },
       "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e7",
+      "label": "Disease",
+      "canonical_name": "atherosclerotic_cardiovascular_disease",
+      "properties": {
+        "name": "atherosclerotic cardiovascular disease",
+        "aliases": ["CVD", "CHD", "coronary heart disease"]
+      },
+      "extraction_confidence": "medium"
     }
   ],
   "relationships": [
     {
       "type": "IS_TYPE",
-      "source_entity_id": "e3",
-      "target_entity_id": "e2",
-      "source_paper": "10.1007/s40262-018-0669-y"
+      "source_entity_id": "e2",
+      "target_entity_id": "e3",
+      "source_paper": "paper/s40262-018-0669-y.pdf"
     },
     {
       "type": "CHARACTERIZES",
-      "source_entity_id": "e3",
+      "source_entity_id": "e2",
       "target_entity_id": "e1",
-      "source_paper": "10.1007/s40262-018-0669-y"
+      "source_paper": "paper/s40262-018-0669-y.pdf"
     },
     {
       "type": "STUDIED_IN",
-      "source_entity_id": "e3",
+      "source_entity_id": "e2",
       "target_entity_id": "e4",
-      "source_paper": "10.1007/s40262-018-0669-y"
+      "source_paper": "paper/s40262-018-0669-y.pdf"
     },
     {
       "type": "TREATS",
-      "source_entity_id": "e3",
+      "source_entity_id": "e2",
       "target_entity_id": "e5",
-      "source_paper": "10.1007/s40262-018-0669-y"
+      "source_paper": "paper/s40262-018-0669-y.pdf"
     },
     {
       "type": "TREATS",
-      "source_entity_id": "e3",
+      "source_entity_id": "e2",
       "target_entity_id": "e6",
-      "source_paper": "10.1007/s40262-018-0669-y"
+      "source_paper": "paper/s40262-018-0669-y.pdf"
+    },
+    {
+      "type": "TREATS",
+      "source_entity_id": "e2",
+      "target_entity_id": "e7",
+      "source_paper": "paper/s40262-018-0669-y.pdf"
     }
   ]
 }
