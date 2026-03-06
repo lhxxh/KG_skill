@@ -7,106 +7,41 @@ description: Extract entities and relationships from a PDF paper using a provide
 
 ## Overview
 
-This guide covers extracting entities and relationships from scientific papers into structured JSON. The extraction reads a PDF and a schema file (e.g., `schema/pk_schema.md`), then writes a normalized JSON file to `output/`. The schema defines what node types, properties, and relationships to look for. For PDF text and table extraction operations, see the pdf skill. This skill does NOT write to Neo4j — loading is handled by `scripts/load_graph.py`.
+This guide covers extracting entities and relationships from papers into structured JSON. Given a user-provided schema and a PDF, it produces a normalized JSON file in `output/`. This skill does NOT write to Neo4j — loading is handled by `scripts/load_graph.py`.
 
-## Quick Start
+## Four-Stage Pipeline
 
-```python
-import pdfplumber
-import json
-from pathlib import Path
+### Stage 1: Read the Schema
 
-# 1. Read schema to understand what entities/relationships to extract
-schema = Path("schema/pk_schema.md").read_text()
+Read the user-provided schema file to understand what to extract. The schema defines:
+- Node types (labels) and their properties
+- Relationships between node types
+- Any normalization or naming conventions
 
-# 2. Extract text from PDF
-with pdfplumber.open("paper/example.pdf") as pdf:
-    pages = [page.extract_text() or "" for page in pdf.pages]
-    full_text = "\n\n".join(pages)
+Do not assume a specific schema format — just read it and identify the node types, properties, and relationships it describes.
 
-# 3. Write extraction JSON
-output = {
-    "source_paper": {"title": "...", "doi": "...", "authors": ["..."], "year": 2017},
-    "entities": [...],
-    "relationships": [...]
-}
-Path("output/example_extraction.json").write_text(json.dumps(output, indent=2))
-```
+### Stage 2: Read the PDF
 
-## PDF Text Extraction
+Use both text extraction and image conversion to capture all content from the PDF. See the pdf skill for detailed usage.
 
-### pdfplumber — Text with Layout
+- **Text and tables**: use `pdfplumber` to extract text and tabular data from each page
+- **Figures and complex layouts**: use `pdf2image` to convert pages to images for visual inspection
 
-```python
-import pdfplumber
+Also extract paper metadata (title, DOI, authors, year) from the first pages.
 
-with pdfplumber.open(pdf_path) as pdf:
-    pages = [page.extract_text() or "" for page in pdf.pages]
-    full_text = "\n\n".join(pages)
-```
+### Stage 3: Extract Entities and Relationships
 
-### pdfplumber — Tables
+Using the schema from Stage 1 and the paper content from Stage 2:
 
-```python
-with pdfplumber.open(pdf_path) as pdf:
-    for i, page in enumerate(pdf.pages):
-        tables = page.extract_tables()
-        for table in tables:
-            print(f"Table on page {i+1}: {table}")
-```
+- For each node type in the schema, identify matching entities in the paper
+- Normalize entity names to a consistent `canonical_name` so that entities referring to the same concept (e.g., a brand name vs. generic name, abbreviations vs. full names) share the same identifier — this is critical for downstream node merging across papers
+- Identify relationships between entities as defined in the schema
+- Assign each entity a unique `entity_id` (e1, e2, ...) and an `extraction_confidence` ("high", "medium", "low")
+- Serialize any object/map-type properties as JSON strings (Neo4j does not support map properties)
 
-### pdf2image — Figures and Complex Tables
+### Stage 4: Write Output JSON
 
-For pages where pdfplumber misses tabular data:
-
-```python
-from pdf2image import convert_from_path
-
-images = convert_from_path(pdf_path, first_page=5, last_page=8)
-for i, img in enumerate(images):
-    img.save(f"page_{i+5}.png")
-```
-
-## Paper Metadata
-
-Extract from the first 1–2 pages:
-
-| Field | Type | Example |
-|-------|------|---------|
-| `title` | string | "Full paper title..." |
-| `doi` | string | "10.xxxx/xxxxx" |
-| `authors` | string[] | ["Author A", "Author B"] |
-| `year` | int | 2017 |
-
-## Entity Normalization
-
-Read the schema to understand normalization rules for each node type. The schema uses the format:
-
-```
-**Label** (description)
-- `canonical_name`: string [canonical] — description → **normalization rule**
-- `property_name`: type — description
-```
-
-Apply the normalization rules specified after the `→` arrow. Common patterns:
-- **lowercase** — e.g., `"human"`, `"warfarin"`
-- **snake_case** — e.g., `"rheumatoid_arthritis"`, `"two_compartment"`
-- **canonical/generic name** — e.g., brand name "Humira" → generic "adalimumab"
-- **JSON string** for `object` type properties — serialize dicts as JSON strings since Neo4j doesn't support map properties
-
-Assign each entity a unique `entity_id` (e1, e2, ...) and an `extraction_confidence` ("high", "medium", "low").
-
-## Relationships
-
-Read the schema's `### Relationships` section to understand which entity types connect and how. Relationships always reference entities by their `entity_id`. The schema format:
-
-```
-- `(SourceLabel)-[:REL_TYPE]->(TargetLabel)` — description — **cardinality**
-```
-
-## JSON Output Contract
-
-Write to `output/{pdf_stem}_extraction.json`:
+Write the extraction result to `output/{pdf_stem}_extraction.json`:
 
 ```json
 {
@@ -132,7 +67,8 @@ Write to `output/{pdf_stem}_extraction.json`:
     {
       "type": "REL_TYPE",
       "source_entity_id": "e1",
-      "target_entity_id": "e2"
+      "target_entity_id": "e2",
+      "source_paper": "10.xxxx/xxxxx"
     }
   ]
 }
@@ -147,32 +83,19 @@ Write to `output/{pdf_stem}_extraction.json`:
 | `source_paper.authors` | string[] | yes | Author names |
 | `source_paper.year` | int | yes | Publication year |
 | `entities[].entity_id` | string | yes | Unique within file (e1, e2, ...) |
-| `entities[].label` | string | yes | Must match a label from the schema |
-| `entities[].canonical_name` | string | yes | Normalized per schema rules |
+| `entities[].label` | string | yes | Must match a node type from the schema |
+| `entities[].canonical_name` | string | yes | Normalized per schema conventions |
 | `entities[].properties` | object | yes | Matches schema properties for that label |
 | `entities[].extraction_confidence` | string | yes | high, medium, or low |
 | `relationships[].type` | string | yes | Must match a relationship type from the schema |
 | `relationships[].source_entity_id` | string | yes | References an entity_id |
 | `relationships[].target_entity_id` | string | yes | References an entity_id |
+| `relationships[].source_paper` | string | yes | DOI of the paper asserting this relationship |
 
 ## Important Rules
 
 - NEVER write to Neo4j — extraction only
-- Read the schema file first to understand what to extract
-- Apply normalization rules from the schema (after the `→` arrow)
-- Serialize `object` type properties as JSON strings, not dicts
-- `string[]` type properties should be native arrays of strings
+- Read the schema first to understand what to extract
+- Use both pdfplumber (text/tables) and pdf2image (figures/complex layouts) — see pdf skill for details
+- Serialize object/map-type properties as JSON strings
 - Include ALL relevant entities described in the paper
-- Assign entity_ids sequentially (e1, e2, ...) — order does not matter as long as relationships reference valid ids
-
-## Quick Reference
-
-| Task | Approach |
-|------|----------|
-| Extract text | `pdfplumber.open(path)` → `page.extract_text()` |
-| Extract tables | `pdfplumber` → `page.extract_tables()` |
-| Inspect figures | `pdf2image` → convert pages to images |
-| Understand what to extract | Read the schema file |
-| Normalize entities | Follow `→` rules in the schema |
-| Serialize object properties | `json.dumps(dict)` → store as string |
-| Determine relationships | Read `### Relationships` in the schema |
