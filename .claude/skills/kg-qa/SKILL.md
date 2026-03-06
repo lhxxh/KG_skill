@@ -1,48 +1,68 @@
-# kg-qa — Natural Language Question Answering over the Knowledge Graph
+---
+name: kg-qa
+description: Answer natural language questions about the pharmacokinetic knowledge graph. Translates questions into Cypher queries, executes against Neo4j, and returns formatted answers with source paper provenance. Triggered by questions like "find models for [drug]", "what drugs treat [disease]?", "show me all [entity type]", "which papers describe [entity]?", "compare models for [drug]", or any natural language question about the PK knowledge graph.
+---
 
-## Trigger
-- "find models for [drug]"
-- "what drugs treat [disease]?"
-- "show me all [entity type]"
-- "which papers describe [entity]?"
-- "compare models for [drug]"
-- Any natural language question about the pharmacokinetic knowledge graph
+# PK Knowledge Graph Question Answering Guide
 
-## Purpose
-Translate natural language questions into Cypher queries, execute them against Neo4j, and return formatted answers with source paper provenance.
+## Overview
 
-## Flow
+This guide covers translating natural language questions into Cypher queries, executing them against the Neo4j PK knowledge graph, and formatting provenance-aware answers. For Cypher syntax and modern patterns, see the neo4j-cypher skill. For data ingestion, see the kg-pipeline skill. The graph schema is defined in `schema/pk_schema.md`.
 
-### Step 1: Understand the Schema
-Read `schema/pk_schema.md` to understand the graph structure:
-- **Nodes**: Model, Type, Drug, Organism, Disease — all keyed on `canonical_name`
-- **Relationships**: IS_TYPE, CHARACTERIZES, STUDIED_IN, TREATS — all carry `source_papers` provenance
-- **Indexes**: fulltext indexes on all node types for fuzzy search
+## Quick Start
 
-### Step 2: Generate Cypher
-Reference the `neo4j-cypher` skill patterns (modern syntax only). Key rules:
-- Anchor queries on indexed `canonical_name` properties
-- Use `CALL db.index.fulltext.queryNodes()` for fuzzy name matching
-- Never use deprecated syntax (see neo4j-cypher skill references)
-- Use CALL subqueries for complex aggregations
+```bash
+# Execute a Cypher query
+cypher-shell -u neo4j -p docling-graph --format plain \
+  "MATCH (m:Model)-[:CHARACTERIZES]->(d:Drug {canonical_name: 'alirocumab'})
+   RETURN m.canonical_name AS model, m.source_papers AS sources;"
+```
 
-### Step 3: Execute Query
-Run via cypher-shell:
+## Graph Schema Reference
+
+### Nodes
+
+All nodes are keyed on `canonical_name` (unique, indexed).
+
+| Label | Key Properties | Fulltext Index |
+|-------|---------------|----------------|
+| Model | `canonical_name`, `mathematical_equations`, `parameter_means`, `parameter_iiv_std_dev` | `model_fulltext` |
+| Drug | `canonical_name`, `drug_name`, `drug_type`, `aliases` | `drug_fulltext` |
+| Type | `canonical_name`, `model_type` | `type_fulltext` |
+| Organism | `canonical_name`, `organism` | `organism_fulltext` |
+| Disease | `canonical_name`, `name`, `aliases` | `disease_fulltext` |
+
+### Relationships
+
+All relationships carry provenance: `source_papers` (string[]) and `extraction_source` (string).
+
+| Type | Pattern | Cardinality |
+|------|---------|-------------|
+| IS_TYPE | `(Model)-[:IS_TYPE]->(Type)` | one-to-one |
+| CHARACTERIZES | `(Model)-[:CHARACTERIZES]->(Drug)` | many-to-one |
+| STUDIED_IN | `(Model)-[:STUDIED_IN]->(Organism)` | many-to-many |
+| TREATS | `(Model)-[:TREATS]->(Disease)` | many-to-many |
+
+## Query Execution
+
 ```bash
 cypher-shell -u neo4j -p docling-graph --format plain "YOUR CYPHER HERE"
 ```
 
-### Step 4: Format Results
-Present results as:
-1. **Direct answer** to the user's question in natural language
-2. **Table** of results when multiple rows returned
-3. **Source papers** (DOIs) for every fact shown — query `source_papers` on both nodes and relationships
+## Cypher Query Patterns
 
-## Provenance-Aware Queries
+### Drug Lookup
 
-CRITICAL: Always include provenance. Every fact in the graph has `source_papers` tracking which paper(s) provided the evidence.
+```cypher
+MATCH (d:Drug {canonical_name: "alirocumab"})
+RETURN d.canonical_name AS drug,
+       d.drug_type AS type,
+       d.aliases AS aliases,
+       d.source_papers AS sources
+```
 
-### Example: Drug Lookup
+### Models for a Drug
+
 ```cypher
 MATCH (m:Model)-[:CHARACTERIZES]->(d:Drug {canonical_name: "alirocumab"})
 MATCH (m)-[r_type:IS_TYPE]->(t:Type)
@@ -52,7 +72,8 @@ RETURN m.canonical_name AS model,
        r_type.source_papers AS rel_sources
 ```
 
-### Example: Models for a Drug (with provenance)
+### Models with Full Context
+
 ```cypher
 MATCH (m:Model)-[r:CHARACTERIZES]->(d:Drug {canonical_name: "alirocumab"})
 MATCH (m)-[:IS_TYPE]->(t:Type)
@@ -65,7 +86,17 @@ RETURN m.canonical_name AS model,
        m.source_papers AS sources
 ```
 
-### Example: Cross-Entity Traversal
+### Drugs that Treat a Disease
+
+```cypher
+MATCH (d:Drug)<-[:CHARACTERIZES]-(m:Model)-[:TREATS]->(dis:Disease {canonical_name: "hypercholesterolemia"})
+RETURN DISTINCT d.canonical_name AS drug,
+       d.drug_type AS type,
+       d.source_papers AS sources
+```
+
+### Cross-Entity Traversal
+
 ```cypher
 MATCH (d:Drug)<-[:CHARACTERIZES]-(m:Model)-[:TREATS]->(dis:Disease {canonical_name: "hypercholesterolemia"})
 RETURN d.canonical_name AS drug,
@@ -73,7 +104,8 @@ RETURN d.canonical_name AS drug,
        m.source_papers AS sources
 ```
 
-### Example: Fuzzy Name Search
+### Fuzzy Name Search
+
 ```cypher
 CALL db.index.fulltext.queryNodes("drug_fulltext", "aliro*")
 YIELD node, score
@@ -82,7 +114,8 @@ RETURN node.canonical_name AS drug, score
 ORDER BY score DESC
 ```
 
-### Example: Aggregation — Papers per Drug
+### Aggregation — Papers per Drug
+
 ```cypher
 MATCH (d:Drug)
 RETURN d.canonical_name AS drug,
@@ -91,7 +124,8 @@ RETURN d.canonical_name AS drug,
 ORDER BY paper_count DESC
 ```
 
-### Example: Edge Provenance
+### Edge Provenance
+
 ```cypher
 MATCH (m:Model)-[r:CHARACTERIZES]->(d:Drug)
 RETURN m.canonical_name AS model,
@@ -100,7 +134,8 @@ RETURN m.canonical_name AS model,
        r.extraction_source AS loaded_from
 ```
 
-### Example: Multi-Paper Entities
+### Multi-Paper Entities
+
 ```cypher
 MATCH (n)
 WHERE size(n.source_papers) > 1
@@ -109,7 +144,38 @@ RETURN labels(n)[0] AS label,
        n.source_papers AS papers
 ```
 
-## Query Patterns by Question Type
+### Model Parameters
+
+```cypher
+MATCH (m:Model {canonical_name: "alirocumab_popPK_two_compartment_tmdd_qss"})
+RETURN m.canonical_name AS model,
+       m.mathematical_equations AS equations,
+       m.parameter_means AS params,
+       m.parameter_iiv_std_dev AS iiv
+```
+
+## Response Format
+
+Always structure responses with provenance:
+
+1. **Answer**: Plain language answer to the question
+2. **Details**: Table or list of results
+3. **Sources**: DOIs that support the answer
+
+Example:
+
+> There are 2 PK models for alirocumab in the knowledge graph:
+>
+> | Model | Type | Diseases |
+> |---|---|---|
+> | alirocumab_popPK_two_compartment_tmdd_qss | two_compartment_tmdd_qss | hypercholesterolemia, familial_hypercholesterolemia |
+> | alirocumab_popPK_two_compartment_michaelis_menten | two_compartment_michaelis_menten | hypercholesterolemia |
+>
+> Sources:
+> - 10.1007/s40262-016-0505-1
+> - 10.1007/s40262-018-0669-y
+
+## Quick Reference
 
 | User asks about... | Query pattern |
 |---|---|
@@ -122,23 +188,4 @@ RETURN labels(n)[0] AS label,
 | Cross-entity | Chain relationships through Model hub node |
 | "Which papers..." | Return `source_papers` from nodes or relationships |
 | Fuzzy/partial name | Use fulltext index with wildcards |
-
-## Response Format
-
-Always structure responses as:
-
-1. **Answer**: Plain language answer to the question
-2. **Details**: Table or list of results
-3. **Sources**: List of DOIs that support the answer
-
-Example response:
-> There are 2 PK models for alirocumab in the knowledge graph:
->
-> | Model | Type | Diseases |
-> |---|---|---|
-> | alirocumab_popPK_two_compartment_tmdd_qss | two_compartment_tmdd_qss | hypercholesterolemia, familial_hypercholesterolemia |
-> | alirocumab_popPK_two_compartment_michaelis_menten | two_compartment_michaelis_menten | hypercholesterolemia |
->
-> Sources:
-> - 10.1007/s40262-016-0505-1
-> - 10.1007/s40262-018-0669-y
+| Model parameters | Return `parameter_means`, `parameter_iiv_std_dev` |
