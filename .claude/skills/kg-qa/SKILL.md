@@ -7,166 +7,61 @@ description: Answer natural language questions about the knowledge graph. Transl
 
 ## Overview
 
-This guide covers translating natural language questions into Cypher queries, executing them against the Neo4j knowledge graph, and formatting provenance-aware answers. The graph schema is defined in the schema file (e.g., `schema/pk_schema.md`) — read it first to understand available node types, relationships, and properties. For Cypher syntax and modern patterns, see the neo4j-cypher skill. For data ingestion, see the kg-pipeline skill.
+This guide covers answering natural language questions against a Neo4j knowledge graph in three stages: (1) discover the relevant schema, (2) translate the question into Cypher, (3) execute against Neo4j and format the answer. For Cypher syntax and modern patterns, see the neo4j-cypher skill. For data ingestion, see the kg-pipeline skill.
 
-## Quick Start
+## Three-Stage Pipeline
 
-```bash
-# Read the schema to understand the graph structure
-cat schema/pk_schema.md
+### Stage 1: Discover the Schema
 
-# Execute a Cypher query
-cypher-shell -u neo4j -p docling-graph --format plain \
-  "MATCH (n) RETURN labels(n)[0] AS label, count(n) AS total ORDER BY total DESC;"
-```
-
-## Graph Schema
-
-Read the schema file to understand:
-- **Node types**: defined as `**Label** (description)` with properties
-- **Relationships**: defined as `(Source)-[:TYPE]->(Target)` with cardinality
-- **Constraints**: uniqueness on `canonical_name` per label
-- **Fulltext indexes**: for fuzzy search
-
-All nodes are keyed on `canonical_name` (unique, indexed). All relationships carry provenance: `source_papers` (string[]) and `extraction_source` (string).
-
-## Query Execution
+Browse the project to find schema files that describe the graph structure. Schema files may live in a `schema/` folder or elsewhere.
 
 ```bash
-cypher-shell -u neo4j -p docling-graph --format plain "YOUR CYPHER HERE"
+ls schema/
 ```
 
-## Cypher Query Patterns
+Read the schema file to understand what node types (labels) and relationships exist in the graph. The schema tells you:
+- What labels are available and what properties each node type has
+- What relationships connect which node types
+- What constraints and indexes are defined (e.g., uniqueness keys, fulltext indexes)
 
-### Entity Lookup
+If multiple schema files exist, pick the one whose node types and relationships best match the entities in the user's question.
 
-```cypher
-MATCH (n:Label {canonical_name: "entity_name"})
-RETURN n.canonical_name AS name, n.source_papers AS sources
+### Stage 2: Translate Question to Cypher
+
+Using the schema from Stage 1, generate a valid Cypher query. Reference the neo4j-cypher skill for modern syntax patterns. Key rules:
+- Anchor queries on the unique key property identified in the schema (often constrained/indexed)
+- Use fulltext indexes (if defined in the schema) for fuzzy name matching
+- Never use deprecated syntax (see neo4j-cypher skill references)
+- Include provenance properties in the RETURN clause if the schema tracks them
+- See the neo4j-cypher skill for query patterns (read, write, fulltext, traversal, aggregation)
+
+### Stage 3: Execute Against Neo4j
+
+Read Neo4j connection settings from `.claude/settings.json` under `mcpServers.neo4j.env` to get the URI, username, and password. Execute the Cypher query via `cypher-shell`:
+
+```bash
+cypher-shell \
+  -a $NEO4J_URI \
+  -u $NEO4J_USERNAME \
+  -p $NEO4J_PASSWORD \
+  --format plain \
+  "YOUR CYPHER HERE"
 ```
 
-### Traverse a Relationship
-
-```cypher
-MATCH (a:SourceLabel)-[r:REL_TYPE]->(b:TargetLabel {canonical_name: "target_name"})
-RETURN a.canonical_name AS source,
-       b.canonical_name AS target,
-       r.source_papers AS rel_sources
-```
-
-### Entity with Full Context
-
-```cypher
-MATCH (a:Label {canonical_name: "name"})-[r]->(b)
-RETURN a.canonical_name AS entity,
-       type(r) AS relationship,
-       labels(b)[0] AS related_type,
-       b.canonical_name AS related_name,
-       r.source_papers AS sources
-```
-
-### Reverse Traversal
-
-```cypher
-MATCH (a:Label)<-[r]-(b)
-WHERE a.canonical_name = "name"
-RETURN b.canonical_name AS related,
-       labels(b)[0] AS type,
-       type(r) AS relationship,
-       r.source_papers AS sources
-```
-
-### Fuzzy Name Search
-
-```cypher
-CALL db.index.fulltext.queryNodes("label_fulltext", "partial*")
-YIELD node, score
-WHERE score > 0.5
-RETURN node.canonical_name AS name, labels(node)[0] AS label, score
-ORDER BY score DESC
-```
-
-### Aggregation — Papers per Entity
-
-```cypher
-MATCH (n:Label)
-RETURN n.canonical_name AS name,
-       size(n.source_papers) AS paper_count,
-       n.source_papers AS papers
-ORDER BY paper_count DESC
-```
-
-### Edge Provenance
-
-```cypher
-MATCH (a)-[r]->(b)
-RETURN a.canonical_name AS source,
-       type(r) AS relationship,
-       b.canonical_name AS target,
-       r.source_papers AS asserted_by,
-       r.extraction_source AS loaded_from
-LIMIT 20
-```
-
-### Multi-Paper Entities
-
-```cypher
-MATCH (n)
-WHERE size(n.source_papers) > 1
-RETURN labels(n)[0] AS label,
-       n.canonical_name AS name,
-       n.source_papers AS papers
-```
-
-### Cross-Entity Traversal
-
-Chain relationships through a hub node to find indirect connections:
-
-```cypher
-MATCH (a:LabelA)<-[:REL1]-(hub:HubLabel)-[:REL2]->(b:LabelB {canonical_name: "name"})
-RETURN a.canonical_name AS result,
-       hub.canonical_name AS via,
-       hub.source_papers AS sources
-```
-
-### All Nodes of a Type
-
-```cypher
-MATCH (n:Label)
-RETURN n.canonical_name AS name, n.source_papers AS sources
-ORDER BY n.canonical_name
-```
+Format the results as a clear answer with supporting evidence from the graph.
 
 ## Response Format
 
-Always structure responses with provenance:
+Structure responses as:
 
 1. **Answer**: Plain language answer to the question
 2. **Details**: Table or list of results
-3. **Sources**: DOIs that support the answer
-
-Example:
-
-> There are 2 matching entities in the knowledge graph:
->
-> | Name | Type | Related |
-> |---|---|---|
-> | entity_a | type_x | related_1, related_2 |
-> | entity_b | type_y | related_3 |
->
-> Sources:
-> - 10.xxxx/paper-1
-> - 10.xxxx/paper-2
+3. **Sources**: Supporting evidence (e.g., provenance properties if the schema tracks them)
 
 ## Quick Reference
 
-| User asks about... | Query pattern |
+| Stage | What to do |
 |---|---|
-| Entity lookup | `MATCH (n:Label {canonical_name: $name})` |
-| Related entities | Traverse relationship from/to the entity |
-| All of a type | `MATCH (n:Label) RETURN n.canonical_name` |
-| Entity comparison | Multiple matches + property comparison |
-| Cross-entity | Chain relationships through hub node |
-| "Which papers..." | Return `source_papers` from nodes or relationships |
-| Fuzzy/partial name | Use fulltext index with wildcards |
-| Graph summary | `RETURN labels(n)[0], count(n)` grouped |
+| 1. Discover schema | Browse project for schema files, read the one matching the user's question |
+| 2. Translate to Cypher | Map question to schema's node types + relationships; see neo4j-cypher skill for patterns |
+| 3. Execute & format | Read creds from `.claude/settings.json`, run via `cypher-shell`, format answer |
