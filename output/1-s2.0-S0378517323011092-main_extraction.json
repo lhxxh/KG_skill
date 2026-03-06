@@ -1,0 +1,400 @@
+{
+  "source_paper": {
+    "title": "A compartment model for subcutaneous injection of monoclonal antibodies",
+    "doi": "10.1016/j.ijpharm.2023.123687",
+    "authors": ["Xiaoxu Zhong", "Yikai Liu", "Arezoo M. Ardekani"],
+    "year": 2024
+  },
+  "entities": [
+    {
+      "entity_id": "e1",
+      "label": "Type",
+      "canonical_name": "eight_compartment",
+      "properties": {
+        "model_type": "eight_compartment"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e2",
+      "label": "Drug",
+      "canonical_name": "rituximab",
+      "properties": {
+        "drug_name": "rituximab",
+        "drug_type": "monoclonal_antibody",
+        "aliases": ["mAb"]
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e3",
+      "label": "Drug",
+      "canonical_name": "adalimumab",
+      "properties": {
+        "drug_name": "adalimumab",
+        "drug_type": "monoclonal_antibody",
+        "aliases": ["mAb"]
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e4",
+      "label": "Drug",
+      "canonical_name": "tocilizumab",
+      "properties": {
+        "drug_name": "tocilizumab",
+        "drug_type": "monoclonal_antibody",
+        "aliases": ["mAb"]
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e5",
+      "label": "Drug",
+      "canonical_name": "infliximab",
+      "properties": {
+        "drug_name": "infliximab",
+        "drug_type": "monoclonal_antibody",
+        "aliases": ["mAb"]
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e6",
+      "label": "Drug",
+      "canonical_name": "anifrolumab",
+      "properties": {
+        "drug_name": "anifrolumab",
+        "drug_type": "monoclonal_antibody",
+        "aliases": ["mAb"]
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e7",
+      "label": "Drug",
+      "canonical_name": "belimumab",
+      "properties": {
+        "drug_name": "belimumab",
+        "drug_type": "monoclonal_antibody",
+        "aliases": ["mAb"]
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e8",
+      "label": "Drug",
+      "canonical_name": "canakinumab",
+      "properties": {
+        "drug_name": "canakinumab",
+        "drug_type": "monoclonal_antibody",
+        "aliases": ["mAb"]
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e9",
+      "label": "Drug",
+      "canonical_name": "daclizumab",
+      "properties": {
+        "drug_name": "daclizumab",
+        "drug_type": "monoclonal_antibody",
+        "aliases": ["mAb"]
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e10",
+      "label": "Drug",
+      "canonical_name": "golimumab",
+      "properties": {
+        "drug_name": "golimumab",
+        "drug_type": "monoclonal_antibody",
+        "aliases": ["mAb"]
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e11",
+      "label": "Drug",
+      "canonical_name": "guselkumab",
+      "properties": {
+        "drug_name": "guselkumab",
+        "drug_type": "monoclonal_antibody",
+        "aliases": ["mAb"]
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e12",
+      "label": "Drug",
+      "canonical_name": "trastuzumab",
+      "properties": {
+        "drug_name": "trastuzumab",
+        "drug_type": "monoclonal_antibody",
+        "aliases": ["mAb"]
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e13",
+      "label": "Organism",
+      "canonical_name": "rat",
+      "properties": {
+        "organism": "rat"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e14",
+      "label": "Organism",
+      "canonical_name": "human",
+      "properties": {
+        "organism": "human"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e15",
+      "label": "Model",
+      "canonical_name": "rituximab_sc_eight_compartment",
+      "properties": {
+        "mathematical_equations": [
+          "dm1/dt = k_r * m_5b - (k_a + k_12) * m_1 + f_S(t)",
+          "dm2/dt = k_12 * m_1 + k_r * m_6b + k_42 * m_4 - (k_a + k_23) * m_2",
+          "dm3/dt = k_23 * m_2 + k_r * m_7b - (k_a + k_34) * m_3 + f_I(t)",
+          "dm4/dt = k_34 * m_3 + k_r * m_8b - (k_a + k_42) * m_4",
+          "dm_jt/dt = k_a * m_(j-4) - k_d * m_jf - k_r * m_jb"
+        ],
+        "parameter_means": "{\"k_12\": 1.498, \"k_23\": 0.72, \"k_34\": 0.689, \"k_42\": 1.274, \"k_a\": 2.68, \"k_r\": 1.796, \"k_d\": 0.984, \"k_diss\": 0.257, \"m_F0\": 1.031}",
+        "parameter_iiv_std_dev": "{\"k_12_sd\": 0.003, \"k_23_sd\": 0.014, \"k_34_sd\": 0.014, \"k_42_sd\": 0.016, \"k_a_sd\": 0.124, \"k_r_sd\": 0.052, \"k_d_sd\": 0.028, \"k_diss_sd\": 0.021, \"m_F0_sd\": 0.119}"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e16",
+      "label": "Model",
+      "canonical_name": "adalimumab_sc_eight_compartment",
+      "properties": {
+        "mathematical_equations": [
+          "dm1/dt = k_r * m_5b - (k_a + k_12) * m_1 + f_S(t)",
+          "dm2/dt = k_12 * m_1 + k_r * m_6b + k_42 * m_4 - (k_a + k_23) * m_2",
+          "dm3/dt = k_23 * m_2 + k_r * m_7b - (k_a + k_34) * m_3 + f_I(t)",
+          "dm4/dt = k_34 * m_3 + k_r * m_8b - (k_a + k_42) * m_4",
+          "dm_jt/dt = k_a * m_(j-4) - k_d * m_jf - k_r * m_jb"
+        ],
+        "parameter_means": "{\"k_12\": 0.714, \"k_23\": 0.312, \"k_34\": 0.212, \"k_42\": 1.024, \"k_a\": 0.13, \"k_r\": 0.824, \"k_d\": 0.377, \"k_diss\": 0.859, \"m_F0\": 0.011}",
+        "parameter_iiv_std_dev": "{\"k_12_sd\": 0.012, \"k_23_sd\": 0.009, \"k_34_sd\": 0.016, \"k_42_sd\": 0.045, \"k_a_sd\": 0.006, \"k_r_sd\": 0.008, \"k_d_sd\": 0.019, \"k_diss_sd\": 0.007, \"m_F0_sd\": 0.001}"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e17",
+      "label": "Model",
+      "canonical_name": "tocilizumab_sc_eight_compartment",
+      "properties": {
+        "mathematical_equations": [
+          "dm1/dt = k_r * m_5b - (k_a + k_12) * m_1 + f_S(t)",
+          "dm2/dt = k_12 * m_1 + k_r * m_6b + k_42 * m_4 - (k_a + k_23) * m_2",
+          "dm3/dt = k_23 * m_2 + k_r * m_7b - (k_a + k_34) * m_3 + f_I(t)",
+          "dm4/dt = k_34 * m_3 + k_r * m_8b - (k_a + k_42) * m_4",
+          "dm_jt/dt = k_a * m_(j-4) - k_d * m_jf - k_r * m_jb"
+        ],
+        "parameter_means": "{\"k_12\": 1.317, \"k_23\": 0.614, \"k_34\": 0.54, \"k_42\": 3.575, \"k_a\": 0.406, \"k_r\": 3.551, \"k_d\": 0.184, \"k_diss\": 1.871, \"m_F0\": 0.019}",
+        "parameter_iiv_std_dev": "{\"k_12_sd\": 0.152, \"k_23_sd\": 0.101, \"k_34_sd\": 0.035, \"k_42_sd\": 1.396, \"k_a_sd\": 0.028, \"k_r_sd\": 0.969, \"k_d_sd\": 0.248, \"k_diss_sd\": 0.538, \"m_F0_sd\": 0.012}"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e18",
+      "label": "Model",
+      "canonical_name": "infliximab_sc_eight_compartment",
+      "properties": {
+        "mathematical_equations": [
+          "dm1/dt = k_r * m_5b - (k_a + k_12) * m_1 + f_S(t)",
+          "dm2/dt = k_12 * m_1 + k_r * m_6b + k_42 * m_4 - (k_a + k_23) * m_2",
+          "dm3/dt = k_23 * m_2 + k_r * m_7b - (k_a + k_34) * m_3 + f_I(t)",
+          "dm4/dt = k_34 * m_3 + k_r * m_8b - (k_a + k_42) * m_4",
+          "dm_jt/dt = k_a * m_(j-4) - k_d * m_jf - k_r * m_jb"
+        ],
+        "parameter_means": "{\"k_12\": 0.374, \"k_23\": 2.633, \"k_34\": 3.009, \"k_42\": 2.424, \"k_a\": 0.102, \"k_r\": 2.228, \"k_d\": 1.642, \"k_diss\": 0.743, \"m_F0\": 0.626}",
+        "parameter_iiv_std_dev": "{\"k_12_sd\": 0.043, \"k_23_sd\": 0.303, \"k_34_sd\": 0.618, \"k_42_sd\": 0.436, \"k_a_sd\": 0.025, \"k_r_sd\": 0.418, \"k_d_sd\": 0.588, \"k_diss_sd\": 0.347, \"m_F0_sd\": 0.35}"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e19",
+      "label": "Model",
+      "canonical_name": "anifrolumab_sc_eight_compartment",
+      "properties": {
+        "mathematical_equations": [
+          "dm1/dt = k_r * m_5b - (k_a + k_12) * m_1 + f_S(t)",
+          "dm2/dt = k_12 * m_1 + k_r * m_6b + k_42 * m_4 - (k_a + k_23) * m_2",
+          "dm3/dt = k_23 * m_2 + k_r * m_7b - (k_a + k_34) * m_3 + f_I(t)",
+          "dm4/dt = k_34 * m_3 + k_r * m_8b - (k_a + k_42) * m_4",
+          "dm_jt/dt = k_a * m_(j-4) - k_d * m_jf - k_r * m_jb"
+        ],
+        "parameter_means": "{\"k_12\": 1.435, \"k_23\": 1.416, \"k_34\": 0.588, \"k_42\": 3.855, \"k_a\": 0.227, \"k_r\": 2.01, \"k_d\": 0.485, \"k_diss\": 1.472, \"m_F0\": 0.038}",
+        "parameter_iiv_std_dev": "{\"k_12_sd\": 0.053, \"k_23_sd\": 0.148, \"k_34_sd\": 0.093, \"k_42_sd\": 0.388, \"k_a_sd\": 0.027, \"k_r_sd\": 0.08, \"k_d_sd\": 0.291, \"k_diss_sd\": 0.103, \"m_F0_sd\": 0.028}"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e20",
+      "label": "Model",
+      "canonical_name": "belimumab_healthy_sc_eight_compartment",
+      "properties": {
+        "mathematical_equations": [
+          "dm1/dt = k_r * m_5b - (k_a + k_12) * m_1 + f_S(t)",
+          "dm2/dt = k_12 * m_1 + k_r * m_6b + k_42 * m_4 - (k_a + k_23) * m_2",
+          "dm3/dt = k_23 * m_2 + k_r * m_7b - (k_a + k_34) * m_3 + f_I(t)",
+          "dm4/dt = k_34 * m_3 + k_r * m_8b - (k_a + k_42) * m_4",
+          "dm_jt/dt = k_a * m_(j-4) - k_d * m_jf - k_r * m_jb"
+        ],
+        "parameter_means": "{\"k_12\": 1.455, \"k_23\": 0.882, \"k_34\": 0.453, \"k_42\": 4.792, \"k_a\": 0.16, \"k_r\": 0.83, \"k_d\": 1.03, \"k_diss\": 0.178, \"m_F0\": 0.06}",
+        "parameter_iiv_std_dev": "{\"k_12_sd\": 0.04, \"k_23_sd\": 0.038, \"k_34_sd\": 0.01, \"k_42_sd\": 0.175, \"k_a_sd\": 0.009, \"k_r_sd\": 0.107, \"k_d_sd\": 0.023, \"k_diss_sd\": 0.064, \"m_F0_sd\": 0.036}"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e21",
+      "label": "Model",
+      "canonical_name": "belimumab_patient_sc_eight_compartment",
+      "properties": {
+        "mathematical_equations": [
+          "dm1/dt = k_r * m_5b - (k_a + k_12) * m_1 + f_S(t)",
+          "dm2/dt = k_12 * m_1 + k_r * m_6b + k_42 * m_4 - (k_a + k_23) * m_2",
+          "dm3/dt = k_23 * m_2 + k_r * m_7b - (k_a + k_34) * m_3 + f_I(t)",
+          "dm4/dt = k_34 * m_3 + k_r * m_8b - (k_a + k_42) * m_4",
+          "dm_jt/dt = k_a * m_(j-4) - k_d * m_jf - k_r * m_jb"
+        ],
+        "parameter_means": "{\"k_12\": 1.405, \"k_23\": 0.423, \"k_34\": 0.159, \"k_42\": 1.544, \"k_a\": 0.153, \"k_r\": 0.688, \"k_d\": 0.96, \"k_diss\": 0.346, \"m_F0\": 0.193}",
+        "parameter_iiv_std_dev": "{\"k_12_sd\": 0.077, \"k_23_sd\": 0.027, \"k_34_sd\": 0.019, \"k_42_sd\": 0.181, \"k_a_sd\": 0.016, \"k_r_sd\": 0.074, \"k_d_sd\": 0.123, \"k_diss_sd\": 0.18, \"m_F0_sd\": 0.114}"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e22",
+      "label": "Model",
+      "canonical_name": "canakinumab_sc_eight_compartment",
+      "properties": {
+        "mathematical_equations": [
+          "dm1/dt = k_r * m_5b - (k_a + k_12) * m_1 + f_S(t)",
+          "dm2/dt = k_12 * m_1 + k_r * m_6b + k_42 * m_4 - (k_a + k_23) * m_2",
+          "dm3/dt = k_23 * m_2 + k_r * m_7b - (k_a + k_34) * m_3 + f_I(t)",
+          "dm4/dt = k_34 * m_3 + k_r * m_8b - (k_a + k_42) * m_4",
+          "dm_jt/dt = k_a * m_(j-4) - k_d * m_jf - k_r * m_jb"
+        ],
+        "parameter_means": "{\"k_12\": 0.481, \"k_23\": 0.568, \"k_34\": 0.27, \"k_42\": 1.689, \"k_a\": 0.113, \"k_r\": 0.913, \"k_d\": 0.249, \"k_diss\": 0.481, \"m_F0\": 0.023}",
+        "parameter_iiv_std_dev": "{\"k_12_sd\": 0.025, \"k_23_sd\": 0.023, \"k_34_sd\": 0.021, \"k_42_sd\": 0.047, \"k_a_sd\": 0.01, \"k_r_sd\": 0.038, \"k_d_sd\": 0.022, \"k_diss_sd\": 0.025, \"m_F0_sd\": 0.01}"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e23",
+      "label": "Model",
+      "canonical_name": "daclizumab_sc_eight_compartment",
+      "properties": {
+        "mathematical_equations": [
+          "dm1/dt = k_r * m_5b - (k_a + k_12) * m_1 + f_S(t)",
+          "dm2/dt = k_12 * m_1 + k_r * m_6b + k_42 * m_4 - (k_a + k_23) * m_2",
+          "dm3/dt = k_23 * m_2 + k_r * m_7b - (k_a + k_34) * m_3 + f_I(t)",
+          "dm4/dt = k_34 * m_3 + k_r * m_8b - (k_a + k_42) * m_4",
+          "dm_jt/dt = k_a * m_(j-4) - k_d * m_jf - k_r * m_jb"
+        ],
+        "parameter_means": "{\"k_12\": 0.549, \"k_23\": 0.303, \"k_34\": 0.202, \"k_42\": 0.686, \"k_a\": 0.134, \"k_r\": 0.377, \"k_d\": 0.932, \"k_diss\": 0.737, \"m_F0\": 0.117}",
+        "parameter_iiv_std_dev": "{\"k_12_sd\": 0.012, \"k_23_sd\": 0.003, \"k_34_sd\": 0.012, \"k_42_sd\": 0.011, \"k_a_sd\": 0.007, \"k_r_sd\": 0.025, \"k_d_sd\": 0.023, \"k_diss_sd\": 0.035, \"m_F0_sd\": 0.014}"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e24",
+      "label": "Model",
+      "canonical_name": "golimumab_sc_eight_compartment",
+      "properties": {
+        "mathematical_equations": [
+          "dm1/dt = k_r * m_5b - (k_a + k_12) * m_1 + f_S(t)",
+          "dm2/dt = k_12 * m_1 + k_r * m_6b + k_42 * m_4 - (k_a + k_23) * m_2",
+          "dm3/dt = k_23 * m_2 + k_r * m_7b - (k_a + k_34) * m_3 + f_I(t)",
+          "dm4/dt = k_34 * m_3 + k_r * m_8b - (k_a + k_42) * m_4",
+          "dm_jt/dt = k_a * m_(j-4) - k_d * m_jf - k_r * m_jb"
+        ],
+        "parameter_means": "{\"k_12\": 1.104, \"k_23\": 1.284, \"k_34\": 3.307, \"k_42\": 4.618, \"k_a\": 0.114, \"k_r\": 1.517, \"k_d\": 3.303, \"k_diss\": 0.503, \"m_F0\": 0.042}",
+        "parameter_iiv_std_dev": "{\"k_12_sd\": 0.031, \"k_23_sd\": 0.055, \"k_34_sd\": 0.196, \"k_42_sd\": 0.295, \"k_a_sd\": 0.003, \"k_r_sd\": 0.054, \"k_d_sd\": 0.176, \"k_diss_sd\": 0.027, \"m_F0_sd\": 0.025}"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e25",
+      "label": "Model",
+      "canonical_name": "guselkumab_sc_eight_compartment",
+      "properties": {
+        "mathematical_equations": [
+          "dm1/dt = k_r * m_5b - (k_a + k_12) * m_1 + f_S(t)",
+          "dm2/dt = k_12 * m_1 + k_r * m_6b + k_42 * m_4 - (k_a + k_23) * m_2",
+          "dm3/dt = k_23 * m_2 + k_r * m_7b - (k_a + k_34) * m_3 + f_I(t)",
+          "dm4/dt = k_34 * m_3 + k_r * m_8b - (k_a + k_42) * m_4",
+          "dm_jt/dt = k_a * m_(j-4) - k_d * m_jf - k_r * m_jb"
+        ],
+        "parameter_means": "{\"k_12\": 1.492, \"k_23\": 0.408, \"k_34\": 0.146, \"k_42\": 0.812, \"k_a\": 0.471, \"k_r\": 0.743, \"k_d\": 1.428, \"k_diss\": 2.052, \"m_F0\": 0.02}",
+        "parameter_iiv_std_dev": "{\"k_12_sd\": 0.008, \"k_23_sd\": 0.008, \"k_34_sd\": 0.002, \"k_42_sd\": 0.009, \"k_a_sd\": 0.005, \"k_r_sd\": 0.009, \"k_d_sd\": 0.014, \"k_diss_sd\": 0.015, \"m_F0_sd\": 0.008}"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e26",
+      "label": "Model",
+      "canonical_name": "trastuzumab_sc_eight_compartment",
+      "properties": {
+        "mathematical_equations": [
+          "dm1/dt = k_r * m_5b - (k_a + k_12) * m_1 + f_S(t)",
+          "dm2/dt = k_12 * m_1 + k_r * m_6b + k_42 * m_4 - (k_a + k_23) * m_2",
+          "dm3/dt = k_23 * m_2 + k_r * m_7b - (k_a + k_34) * m_3 + f_I(t)",
+          "dm4/dt = k_34 * m_3 + k_r * m_8b - (k_a + k_42) * m_4",
+          "dm_jt/dt = k_a * m_(j-4) - k_d * m_jf - k_r * m_jb"
+        ],
+        "parameter_means": "{\"k_12\": 1.499, \"k_23\": 1.036, \"k_34\": 0.232, \"k_42\": 1.312, \"k_a\": 0.311, \"k_r\": 1.232, \"k_d\": 0.291, \"k_diss\": 0.294, \"m_F0\": 0.087}",
+        "parameter_iiv_std_dev": "{\"k_12_sd\": 0.001, \"k_23_sd\": 0.014, \"k_34_sd\": 0.005, \"k_42_sd\": 0.026, \"k_a_sd\": 0.006, \"k_r_sd\": 0.023, \"k_d_sd\": 0.013, \"k_diss_sd\": 0.013, \"m_F0_sd\": 0.03}"
+      },
+      "extraction_confidence": "high"
+    }
+  ],
+  "relationships": [
+    {"type": "IS_TYPE", "source_entity_id": "e15", "target_entity_id": "e1", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "IS_TYPE", "source_entity_id": "e16", "target_entity_id": "e1", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "IS_TYPE", "source_entity_id": "e17", "target_entity_id": "e1", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "IS_TYPE", "source_entity_id": "e18", "target_entity_id": "e1", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "IS_TYPE", "source_entity_id": "e19", "target_entity_id": "e1", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "IS_TYPE", "source_entity_id": "e20", "target_entity_id": "e1", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "IS_TYPE", "source_entity_id": "e21", "target_entity_id": "e1", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "IS_TYPE", "source_entity_id": "e22", "target_entity_id": "e1", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "IS_TYPE", "source_entity_id": "e23", "target_entity_id": "e1", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "IS_TYPE", "source_entity_id": "e24", "target_entity_id": "e1", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "IS_TYPE", "source_entity_id": "e25", "target_entity_id": "e1", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "IS_TYPE", "source_entity_id": "e26", "target_entity_id": "e1", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "CHARACTERIZES", "source_entity_id": "e15", "target_entity_id": "e2", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "CHARACTERIZES", "source_entity_id": "e16", "target_entity_id": "e3", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "CHARACTERIZES", "source_entity_id": "e17", "target_entity_id": "e4", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "CHARACTERIZES", "source_entity_id": "e18", "target_entity_id": "e5", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "CHARACTERIZES", "source_entity_id": "e19", "target_entity_id": "e6", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "CHARACTERIZES", "source_entity_id": "e20", "target_entity_id": "e7", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "CHARACTERIZES", "source_entity_id": "e21", "target_entity_id": "e7", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "CHARACTERIZES", "source_entity_id": "e22", "target_entity_id": "e8", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "CHARACTERIZES", "source_entity_id": "e23", "target_entity_id": "e9", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "CHARACTERIZES", "source_entity_id": "e24", "target_entity_id": "e10", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "CHARACTERIZES", "source_entity_id": "e25", "target_entity_id": "e11", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "CHARACTERIZES", "source_entity_id": "e26", "target_entity_id": "e12", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "STUDIED_IN", "source_entity_id": "e15", "target_entity_id": "e13", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "STUDIED_IN", "source_entity_id": "e16", "target_entity_id": "e14", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "STUDIED_IN", "source_entity_id": "e17", "target_entity_id": "e14", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "STUDIED_IN", "source_entity_id": "e18", "target_entity_id": "e14", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "STUDIED_IN", "source_entity_id": "e19", "target_entity_id": "e14", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "STUDIED_IN", "source_entity_id": "e20", "target_entity_id": "e14", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "STUDIED_IN", "source_entity_id": "e21", "target_entity_id": "e14", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "STUDIED_IN", "source_entity_id": "e22", "target_entity_id": "e14", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "STUDIED_IN", "source_entity_id": "e23", "target_entity_id": "e14", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "STUDIED_IN", "source_entity_id": "e24", "target_entity_id": "e14", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "STUDIED_IN", "source_entity_id": "e25", "target_entity_id": "e14", "source_paper": "10.1016/j.ijpharm.2023.123687"},
+    {"type": "STUDIED_IN", "source_entity_id": "e26", "target_entity_id": "e14", "source_paper": "10.1016/j.ijpharm.2023.123687"}
+  ]
+}

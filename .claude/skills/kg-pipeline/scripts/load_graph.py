@@ -3,25 +3,20 @@
 load_graph.py — Deterministic Neo4j loader (NO LLM)
 
 Reads extraction JSON files and loads entities/relationships into Neo4j
-using cypher-shell subprocess calls. Parses the schema file to create
-constraints/indexes, and performs entity resolution via a 5-step cascade
-(exact, case-insensitive, alias, fuzzy, create new).
-
-Schema-driven: works with any schema, not hardcoded to a specific domain.
+using cypher-shell subprocess calls. Derives node labels from the JSON
+entities and performs entity resolution via a 3-step cascade
+(exact, case-insensitive, alias, or create new).
 
 Usage:
-    python3 scripts/load_graph.py --schema schema/pk_schema.md --init-schema
-    python3 scripts/load_graph.py --schema schema/pk_schema.md output/paper_extraction.json
-    python3 scripts/load_graph.py --schema schema/pk_schema.md output/*.json
+    python3 .claude/skills/kg-pipeline/scripts/load_graph.py output/paper1_extraction.json
+    python3 .claude/skills/kg-pipeline/scripts/load_graph.py output/*.json
 """
 
 import argparse
 import json
 import os
-import re
 import subprocess
 import sys
-from difflib import SequenceMatcher
 from pathlib import Path
 
 # --- Configuration ---
@@ -29,9 +24,6 @@ from pathlib import Path
 NEO4J_URI = os.environ.get("NEO4J_URI", "bolt://localhost:7687")
 NEO4J_USER = os.environ.get("NEO4J_USERNAME", "neo4j")
 NEO4J_PASS = os.environ.get("NEO4J_PASSWORD", "docling-graph")
-
-# Entity resolution fuzzy match threshold
-FUZZY_THRESHOLD = 0.85
 
 # --- Cypher Execution ---
 
@@ -85,81 +77,6 @@ def _escape(s):
     return s.replace("\\", "\\\\").replace('"', '\\"').replace("'", "\\'")
 
 
-# --- Schema Parsing ---
-
-
-def parse_schema(schema_path):
-    """
-    Parse a schema markdown file to extract labels, constraints, and fulltext indexes.
-
-    Returns:
-        {
-            "labels": ["Drug", "Model", ...],
-            "constraints": ["CREATE CONSTRAINT ... ;", ...],
-            "fulltext_indexes": ["CREATE FULLTEXT INDEX ... ;", ...],
-        }
-    """
-    text = Path(schema_path).read_text()
-    result = {"labels": [], "constraints": [], "fulltext_indexes": []}
-
-    # Extract labels from **Label** (description) lines
-    for m in re.finditer(r'^\*\*(\w+)\*\*', text, re.MULTILINE):
-        label = m.group(1)
-        if label not in result["labels"]:
-            result["labels"].append(label)
-
-    # Parse constraints: `Label.property` — UNIQUE
-    for m in re.finditer(r'`(\w+)\.(\w+)`\s*—\s*UNIQUE', text):
-        label, prop = m.group(1), m.group(2)
-        name = f"{label.lower()}_{prop}"
-        stmt = (
-            f"CREATE CONSTRAINT {name} IF NOT EXISTS "
-            f"FOR (n:{label}) REQUIRE n.{prop} IS UNIQUE;"
-        )
-        result["constraints"].append(stmt)
-
-    # Parse fulltext indexes: `index_name` on Label: `[prop1, prop2]`
-    for m in re.finditer(r'`(\w+)`\s+on\s+(\w+):\s*`\[([^\]]+)\]`', text):
-        idx_name, label, props_str = m.group(1), m.group(2), m.group(3)
-        props = [p.strip() for p in props_str.split(",")]
-        prop_list = ", ".join(f"n.{p}" for p in props)
-        stmt = (
-            f"CREATE FULLTEXT INDEX {idx_name} IF NOT EXISTS "
-            f"FOR (n:{label}) ON EACH [{prop_list}];"
-        )
-        result["fulltext_indexes"].append(stmt)
-
-    return result
-
-
-# --- Schema Initialization ---
-
-
-def init_schema(schema_info):
-    """Create constraints and fulltext indexes from parsed schema (idempotent)."""
-    print("=== Initializing Schema ===")
-
-    for stmt in schema_info["constraints"]:
-        run_cypher(stmt)
-    print(f"  Created/verified {len(schema_info['constraints'])} constraints")
-
-    for stmt in schema_info["fulltext_indexes"]:
-        run_cypher(stmt)
-    print(f"  Created/verified {len(schema_info['fulltext_indexes'])} fulltext indexes")
-
-    # Verify
-    out = run_cypher("SHOW CONSTRAINTS;")
-    if out:
-        count = len([l for l in out.strip().split("\n") if l.strip()]) - 1
-        print(f"  Verified: {max(count, 0)} constraints in DB")
-
-    out = run_cypher("SHOW INDEXES;")
-    if out:
-        count = len([l for l in out.strip().split("\n") if l.strip()]) - 1
-        print(f"  Verified: {max(count, 0)} indexes in DB")
-    print()
-
-
 # --- Entity Resolution ---
 
 
@@ -196,9 +113,9 @@ RETURN n.canonical_name AS name, coalesce(n.aliases, []) AS aliases
 
 def resolve_entity(entity, registry):
     """
-    5-step entity resolution cascade.
+    3-step entity resolution cascade.
     Returns (resolved_name, action) where action is one of:
-    'exact_match', 'case_match', 'alias_match', 'fuzzy_match', 'create_new'
+    'exact_match', 'case_match', 'alias_match', 'create_new'
     """
     label = entity["label"]
     name = entity["canonical_name"]
@@ -219,19 +136,7 @@ def resolve_entity(entity, registry):
         if name.lower() in [a.lower() for a in node["aliases"]]:
             return node["canonical_name"], "alias_match"
 
-    # Step 4: Fuzzy match
-    best_score = 0
-    best_name = None
-    for node in existing:
-        score = SequenceMatcher(None, name.lower(), node["canonical_name"].lower()).ratio()
-        if score > best_score:
-            best_score = score
-            best_name = node["canonical_name"]
-
-    if best_score >= FUZZY_THRESHOLD:
-        return best_name, "fuzzy_match"
-
-    # Step 5: Create new
+    # Step 4: Create new
     return name, "create_new"
 
 
@@ -257,7 +162,7 @@ def _cypher_value(val):
 
 
 def merge_node(entity, doi, json_filename):
-    """MERGE a single node into Neo4j. Schema-agnostic: reads label and properties from the entity."""
+    """MERGE a single node into Neo4j. Reads label and properties from the entity."""
     label = entity["label"]
     name = entity["canonical_name"]
     props = entity.get("properties", {})
@@ -326,24 +231,10 @@ ON MATCH SET
     return result is not None
 
 
-# --- Dedup Candidate Flagging ---
-
-
-def flag_dedup_candidate(name, label, matched_name, score):
-    """Flag a node as a dedup candidate."""
-    reason = f"fuzzy_match(score={score:.2f}, matched={matched_name})"
-    query = f"""
-MATCH (n:{label} {{canonical_name: "{_escape(name)}"}})
-SET n.dedup_candidate = true,
-    n.dedup_reason = "{_escape(reason)}"
-"""
-    run_cypher(query)
-
-
 # --- Main Loading Logic ---
 
 
-def load_json(json_path, labels):
+def load_json(json_path):
     """Load a single extraction JSON into Neo4j."""
     json_path = Path(json_path)
     json_filename = json_path.name
@@ -361,6 +252,9 @@ def load_json(json_path, labels):
     print(f"  DOI: {doi}")
     print(f"  Entities: {len(entities)}, Relationships: {len(relationships)}")
 
+    # Derive labels from entities in this JSON
+    labels = list({e["label"] for e in entities})
+
     # Build entity lookup by id
     entities_by_id = {e["entity_id"]: e for e in entities}
 
@@ -371,7 +265,6 @@ def load_json(json_path, labels):
     stats = {
         "matched": 0,
         "created": 0,
-        "fuzzy_flagged": 0,
         "merge_failed": 0,
         "rels_created": 0,
         "rels_failed": 0,
@@ -385,10 +278,6 @@ def load_json(json_path, labels):
         if action == "create_new":
             stats["created"] += 1
             print(f"  [NEW]   {entity['label']:10} {entity['canonical_name']}")
-        elif action == "fuzzy_match":
-            stats["fuzzy_flagged"] += 1
-            stats["matched"] += 1
-            print(f"  [FUZZY] {entity['label']:10} {entity['canonical_name']} -> {resolved_name}")
         else:
             stats["matched"] += 1
             print(f"  [MATCH] {entity['label']:10} {entity['canonical_name']} ({action})")
@@ -400,13 +289,6 @@ def load_json(json_path, labels):
         success = merge_node(entity, doi, json_filename)
         if not success:
             stats["merge_failed"] += 1
-
-        # Flag fuzzy matches as dedup candidates
-        if action == "fuzzy_match":
-            flag_dedup_candidate(
-                resolved_name, entity["label"], entity["canonical_name"],
-                SequenceMatcher(None, entity["canonical_name"].lower(), resolved_name.lower()).ratio()
-            )
 
         # Update registry for subsequent resolution within same file
         label = entity["label"]
@@ -456,7 +338,6 @@ RETURN type(r) AS rel_type, count(r) AS count
     print(f"\n  --- Summary ---")
     print(f"  Matched:  {stats['matched']}")
     print(f"  Created:  {stats['created']}")
-    print(f"  Fuzzy:    {stats['fuzzy_flagged']}")
     print(f"  Failed:   {stats['merge_failed']}")
     print(f"  Rels OK:  {stats['rels_created']}")
     print(f"  Rels Err: {stats['rels_failed']}")
@@ -511,45 +392,10 @@ def main():
     )
     parser.add_argument(
         "json_files",
-        nargs="*",
+        nargs="+",
         help="Path(s) to extraction JSON files",
     )
-    parser.add_argument(
-        "--schema",
-        default="schema/pk_schema.md",
-        help="Path to schema markdown file (default: schema/pk_schema.md)",
-    )
-    parser.add_argument(
-        "--init-schema",
-        action="store_true",
-        help="Create constraints and fulltext indexes",
-    )
     args = parser.parse_args()
-
-    if not args.init_schema and not args.json_files:
-        parser.print_help()
-        sys.exit(1)
-
-    # Parse schema
-    schema_path = Path(args.schema)
-    if not schema_path.exists():
-        print(f"[ERROR] Schema file not found: {args.schema}", file=sys.stderr)
-        sys.exit(1)
-
-    schema_info = parse_schema(schema_path)
-    labels = schema_info["labels"]
-
-    if not labels:
-        print(f"[ERROR] No labels found in schema: {args.schema}", file=sys.stderr)
-        sys.exit(1)
-
-    print(f"Schema: {args.schema} ({len(labels)} labels: {', '.join(labels)})")
-
-    if args.init_schema:
-        init_schema(schema_info)
-
-    if not args.json_files:
-        return
 
     # Load each JSON
     all_stats = []
@@ -564,7 +410,7 @@ def main():
             print(f"[WARN] Skipping non-JSON file: {json_path}", file=sys.stderr)
             continue
         try:
-            stats = load_json(json_path, labels)
+            stats = load_json(json_path)
             all_stats.append((json_path, stats))
         except Exception as e:
             print(f"[ERROR] Failed to load {json_path}: {e}", file=sys.stderr)
@@ -578,13 +424,11 @@ def main():
     print("=== Final Report ===")
     total_created = sum(s["created"] for _, s in all_stats)
     total_matched = sum(s["matched"] for _, s in all_stats)
-    total_fuzzy = sum(s["fuzzy_flagged"] for _, s in all_stats)
     total_rels = sum(s["rels_created"] for _, s in all_stats)
     print(f"  Files loaded:  {len(all_stats)}")
     print(f"  Files failed:  {len(failed)}")
     print(f"  Nodes created: {total_created}")
     print(f"  Nodes matched: {total_matched}")
-    print(f"  Fuzzy flags:   {total_fuzzy}")
     print(f"  Relationships: {total_rels}")
 
     if failed:

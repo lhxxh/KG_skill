@@ -1,0 +1,170 @@
+{
+  "source_paper": {
+    "title": "Target-Mediated Drug Disposition Population Pharmacokinetics Model of Alirocumab in Healthy Volunteers and Patients: Pooled Analysis of Randomized Phase I/II/III Studies",
+    "doi": "10.1007/s40262-016-0505-1",
+    "authors": [
+      "Nassim Djebli",
+      "Jean-Marie Martinez",
+      "Laura Lohan",
+      "Sonia Khier",
+      "Aurelie Brunet",
+      "Fabrice Hurbin",
+      "David Fabre"
+    ],
+    "year": 2017
+  },
+  "entities": [
+    {
+      "entity_id": "e1",
+      "label": "Model",
+      "canonical_name": "alirocumab_tmdd_qss_two_compartment",
+      "properties": {
+        "mathematical_equations": [
+          "dCtot/dt = Ka*Adepot/Vc - (CLL/Vc)*C - Kint*RC - (Q/Vc)*(C - Ap/Vp)",
+          "dRtot/dt = Ksyn - Kdeg*R - Kint*RC",
+          "dAp/dt = Q*(C - Ap/Vp)",
+          "RC = 0.5*(Ctot + Rtot + KSS - sqrt((Ctot + Rtot + KSS)^2 - 4*Ctot*Rtot))",
+          "KSS = (Koff + Kint)/Kon",
+          "C = Ctot - RC",
+          "R = Rtot - RC",
+          "Vc = TVVC * COV1^DISST (DISST=0 healthy, 1 patient)"
+        ],
+        "parameter_means": "{\"CLL_L_per_day\": 0.167, \"Kon_per_nM_per_day\": 559, \"Kint_per_day\": 0.125, \"Kdeg_per_day\": 1.35, \"Q_L_per_day\": 0.494, \"Vc_L_healthy\": 3.16, \"Vc_L_patient\": 4.93, \"COV1_DISST_on_Vc\": 1.56, \"Vp_L\": 2.61, \"Ka_per_day\": 0.584, \"F1\": 0.647, \"LAG_days\": 0.0298}",
+        "parameter_iiv_std_dev": "{\"CLL_cv_pct\": 50.2, \"Kint_cv_pct\": 23.7, \"Kdeg_cv_pct\": 41.1, \"Q_cv_pct\": 25.7, \"Vc_cv_pct\": 30.8, \"Ka_cv_pct\": 71.5, \"F1_cv_pct\": 54.3}"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e2",
+      "label": "Model",
+      "canonical_name": "alirocumab_tmdd_qss_expanded_two_compartment",
+      "properties": {
+        "mathematical_equations": [
+          "dCtot/dt = Ka*Adepot/Vc - (CLL/Vc)*C - Kint*RC - (Q/Vc)*(C - Ap/Vp)",
+          "dRtot/dt = Ksyn - Kdeg*R - Kint*RC",
+          "dAp/dt = Q*(C - Ap/Vp)",
+          "RC = 0.5*(Ctot + Rtot + KSS - sqrt((Ctot + Rtot + KSS)^2 - 4*Ctot*Rtot))",
+          "KSS = (Koff + Kint)/Kon",
+          "C = Ctot - RC",
+          "R = Rtot - RC",
+          "CLL = TVCLL * COV1^STATIN (STATIN=1 with statin, 0 without)",
+          "P_i = TVP * (WT/WT_med)^EXP (EXP=1 for Vc, 0.75 for CLL and Q)"
+        ],
+        "parameter_means": "{\"CLL_L_per_day_no_statin\": 0.176, \"CLL_L_per_day_with_statin\": 0.224, \"COV1_STATIN_on_CLL\": 1.27, \"Kon_per_nM_per_day\": 559, \"Kint_per_day\": 0.112, \"Kdeg_per_day\": 1.10, \"Q_L_per_day\": 0.343, \"Vc_L\": 4.67, \"Vp_L\": 2.61, \"Ka_per_day\": 0.556, \"F1\": 0.307, \"LAG_days\": 0.0535}",
+        "parameter_iiv_std_dev": "{\"CLL_cv_pct\": 43.9, \"Kint_cv_pct\": 24.9, \"Kdeg_cv_pct\": 46.8, \"Q_cv_pct\": 65.3, \"Vc_cv_pct\": 22.7, \"Ka_cv_pct\": 85.0, \"F1_cv_pct\": 65.8}"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e3",
+      "label": "Type",
+      "canonical_name": "two_compartment_tmdd_qss",
+      "properties": {
+        "model_type": "two_compartment_tmdd_qss"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e4",
+      "label": "Drug",
+      "canonical_name": "alirocumab",
+      "properties": {
+        "drug_name": "alirocumab",
+        "drug_type": "monoclonal_antibody",
+        "aliases": ["Praluent", "SAR236553", "REGN727"]
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e5",
+      "label": "Organism",
+      "canonical_name": "human",
+      "properties": {
+        "organism": "human"
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e6",
+      "label": "Disease",
+      "canonical_name": "heterozygous_familial_hypercholesterolemia",
+      "properties": {
+        "name": "heterozygous familial hypercholesterolemia",
+        "aliases": ["HeFH", "FH"]
+      },
+      "extraction_confidence": "high"
+    },
+    {
+      "entity_id": "e7",
+      "label": "Disease",
+      "canonical_name": "non_familial_hypercholesterolemia",
+      "properties": {
+        "name": "non-familial hypercholesterolemia",
+        "aliases": ["non-FH", "non-FH dyslipidemia"]
+      },
+      "extraction_confidence": "high"
+    }
+  ],
+  "relationships": [
+    {
+      "type": "IS_TYPE",
+      "source_entity_id": "e1",
+      "target_entity_id": "e3",
+      "source_paper": "10.1007/s40262-016-0505-1"
+    },
+    {
+      "type": "IS_TYPE",
+      "source_entity_id": "e2",
+      "target_entity_id": "e3",
+      "source_paper": "10.1007/s40262-016-0505-1"
+    },
+    {
+      "type": "CHARACTERIZES",
+      "source_entity_id": "e1",
+      "target_entity_id": "e4",
+      "source_paper": "10.1007/s40262-016-0505-1"
+    },
+    {
+      "type": "CHARACTERIZES",
+      "source_entity_id": "e2",
+      "target_entity_id": "e4",
+      "source_paper": "10.1007/s40262-016-0505-1"
+    },
+    {
+      "type": "STUDIED_IN",
+      "source_entity_id": "e1",
+      "target_entity_id": "e5",
+      "source_paper": "10.1007/s40262-016-0505-1"
+    },
+    {
+      "type": "STUDIED_IN",
+      "source_entity_id": "e2",
+      "target_entity_id": "e5",
+      "source_paper": "10.1007/s40262-016-0505-1"
+    },
+    {
+      "type": "TREATS",
+      "source_entity_id": "e1",
+      "target_entity_id": "e6",
+      "source_paper": "10.1007/s40262-016-0505-1"
+    },
+    {
+      "type": "TREATS",
+      "source_entity_id": "e1",
+      "target_entity_id": "e7",
+      "source_paper": "10.1007/s40262-016-0505-1"
+    },
+    {
+      "type": "TREATS",
+      "source_entity_id": "e2",
+      "target_entity_id": "e6",
+      "source_paper": "10.1007/s40262-016-0505-1"
+    },
+    {
+      "type": "TREATS",
+      "source_entity_id": "e2",
+      "target_entity_id": "e7",
+      "source_paper": "10.1007/s40262-016-0505-1"
+    }
+  ]
+}

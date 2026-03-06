@@ -1,13 +1,13 @@
 ---
 name: kg-extract
-description: Extract entities and relationships from a PDF paper using a provided schema, outputting structured JSON to output/. Triggered when extracting entities from a paper, running kg-extract, or called programmatically by scripts/ingest.py. This skill uses the LLM to understand paper content and normalize entities. It does NOT touch Neo4j.
+description: Extract entities and relationships from a PDF paper using a provided schema, outputting structured JSON to output/. Triggered when extracting entities from a paper, running kg-extract, or called programmatically by the kg-pipeline skill. This skill uses the LLM to understand paper content and normalize entities. It does NOT touch Neo4j.
 ---
 
 # Entity Extraction Guide
 
 ## Overview
 
-This guide covers extracting entities and relationships from papers into structured JSON. Given a user-provided schema and a PDF, it produces a normalized JSON file in `output/`. This skill does NOT write to Neo4j — loading is handled by `scripts/load_graph.py`.
+This guide covers extracting entities and relationships from papers into structured JSON. Given a user-provided schema and a PDF, it produces a normalized JSON file in `output/`. This skill does NOT write to Neo4j — loading is handled by `.claude/skills/kg-pipeline/scripts/load_graph.py`.
 
 ## Four-Stage Pipeline
 
@@ -68,7 +68,7 @@ Write the extraction result to `output/{pdf_stem}_extraction.json`:
       "type": "REL_TYPE",
       "source_entity_id": "e1",
       "target_entity_id": "e2",
-      "source_paper": "10.xxxx/xxxxx"
+      "source_paper": "paper/filename.pdf"
     }
   ]
 }
@@ -90,7 +90,7 @@ Write the extraction result to `output/{pdf_stem}_extraction.json`:
 | `relationships[].type` | string | yes | Must match a relationship type from the schema |
 | `relationships[].source_entity_id` | string | yes | References an entity_id |
 | `relationships[].target_entity_id` | string | yes | References an entity_id |
-| `relationships[].source_paper` | string | yes | DOI of the paper asserting this relationship |
+| `relationships[].source_paper` | string | yes | File path of the paper being processed (e.g., `paper/filename.pdf`) |
 
 ## Important Rules
 
